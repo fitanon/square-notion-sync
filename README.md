@@ -1,40 +1,157 @@
-# Square Callouts Starter (Perplexity + Comet integration)
+# FitAnon Square Multi-Account Sync
 
-Minimal starter to demonstrate how to call Square APIs (payments/orders) from Python, enrich or verify results via Perplexity AI, and log experiments/metrics with Comet ML.
+Centralized data sync for multiple Square accounts. Built for The Fit Clinic businesses.
 
-Important: Do NOT commit your secrets. Use environment variables or a secrets manager.
+## Supported Accounts
 
-Quick start (macOS / zsh)
+| Business | Email | Env Variable Prefix |
+|----------|-------|---------------------|
+| THE FIT CLINIC LLC | mike@thefitclinicsj.com | `ACCOUNT__FITCLINIC_LLC__` |
+| FITCLINIC.IO | mike@fitclinic.io | `ACCOUNT__FITCLINIC__` |
+| FITNESS WITH MIKE | shmockeyfit@gmail.com | `ACCOUNT__FITNESSWITHMIKE__` |
 
-1. Copy `.env.example` to `.env` and fill in credentials (do not commit `.env`).
+## Quick Start
 
 ```bash
-cd square-callouts-starter
+# 1. Clone and enter directory
+git clone https://github.com/fitanon/square-notion-sync.git
+cd square-notion-sync
+
+# 2. Install dependencies
+make install
+
+# 3. Configure your accounts (edit .env)
 cp .env.example .env
-# edit .env and add your tokens
+# Add your Square API tokens to .env
+
+# 4. Check connection status
+make status
+
+# 5. View your data
+make customers
+make transactions
 ```
 
-2. Create a virtual environment and install dependencies (script included):
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `make install` | Set up Python environment and dependencies |
+| `make status` | Check connection status for all accounts |
+| `make customers` | List customers from all accounts |
+| `make transactions` | List recent transactions (last 30 days) |
+| `make invoices` | List invoices from all accounts |
+| `make export` | Export all data to JSON files |
+| `make server` | Start the API server |
+
+## Configuration
+
+Edit `.env` with your Square API tokens:
 
 ```bash
-./install-perplexity.sh
+# Environment (sandbox or production)
+SQUARE_ENV=production
+
+# Account 1: THE FIT CLINIC LLC
+ACCOUNT__FITCLINIC_LLC__TOKEN=your_token_here
+ACCOUNT__FITCLINIC_LLC__EMAIL=mike@thefitclinicsj.com
+
+# Account 2: FITCLINIC.IO
+ACCOUNT__FITCLINIC__TOKEN=your_token_here
+ACCOUNT__FITCLINIC__EMAIL=mike@fitclinic.io
+
+# Account 3: FITNESS WITH MIKE
+ACCOUNT__FITNESSWITHMIKE__TOKEN=your_token_here
+ACCOUNT__FITNESSWITHMIKE__EMAIL=shmockeyfit@gmail.com
 ```
 
-3. Run the example callout (this will call Square's sandbox or production depending on env):
+## API Server
+
+Start the server:
+```bash
+make server
+# or
+python cli.py server --port 8000
+```
+
+### Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /health` | Health check |
+| `GET /accounts` | List all configured accounts |
+| `GET /customers` | Get customers from all accounts |
+| `GET /customers/{source}` | Get customers from specific account |
+| `GET /transactions?days=30` | Get recent transactions |
+| `GET /invoices` | Get invoices from all accounts |
+| `GET /summary` | Get account summary |
+
+API docs available at: `http://localhost:8000/docs`
+
+## CLI Usage
 
 ```bash
-python3 -m src.callouts
+# Activate environment first
+source venv/bin/activate
+
+# Check status
+python cli.py status
+
+# List customers (verbose)
+python cli.py customers -v
+
+# Get transactions from last 7 days
+python cli.py transactions --days 7 -v
+
+# Export all data
+python cli.py export --output ./my-exports
+
+# Start server on custom port
+python cli.py server --port 3000
 ```
 
-Files
-- `install-perplexity.sh` — creates venv and installs requirements
-- `requirements.txt` — Python packages used
-- `.env.example` — example environment variables (no secrets)
-- `src/callouts.py` — example code showing Square API call, Perplexity query, and Comet logging
+## Project Structure
 
-Square notes
-- For local testing prefer Square Sandbox endpoints. Set `SQUARE_ENV=sandbox` in `.env` and populate `SQUARE_SANDBOX_ACCESS_TOKEN`.
-- For production use the live endpoints and `SQUARE_ACCESS_TOKEN`.
+```
+square-notion-sync/
+├── .env                    # Your API tokens (not in git)
+├── .env.example            # Template for .env
+├── cli.py                  # Command-line interface
+├── Makefile                # Quick commands
+├── requirements.txt        # Python dependencies
+├── src/
+│   ├── callouts.py         # Original Square API examples
+│   └── multi_account.py    # Multi-account sync module
+├── fastapi/
+│   ├── app.py              # API server
+│   ├── accounts.py         # Account helpers
+│   ├── oauth.py            # OAuth flow
+│   └── token_store.py      # Token storage
+└── exports/                # Exported JSON data
+```
 
-Security
-- Never check secrets into git. Use `.env` only for local development and a real secrets manager (Vercel/Netlify environment variables or HashiCorp Vault) in production.
+## Getting Square API Tokens
+
+1. Go to [Square Developer Dashboard](https://developer.squareup.com/apps)
+2. Log in with each Square account
+3. Create an app (or use existing)
+4. Go to Credentials → Production Access Token
+5. Copy the token to your `.env` file
+
+## Zapier Integration
+
+See [ZAPIER_SETUP_INSTRUCTIONS.md](ZAPIER_SETUP_INSTRUCTIONS.md) for setting up automated sync with Zapier Tables.
+
+## Security
+
+- **Never commit `.env`** - it contains secrets
+- Use environment variables in production
+- Tokens are scoped - request only needed permissions
+- Rotate tokens if exposed
+
+## Support
+
+Built for Mike @ The Fit Clinic by Claude.
+
+---
+*Last updated: January 2026*
