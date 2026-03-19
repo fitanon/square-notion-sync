@@ -15,17 +15,31 @@ from typing import List, Dict, Optional
 from collections import defaultdict
 
 from core.config import Config
-from core.accounts import Customer, Booking, Payment
+from core.accounts import Customer, Booking, Payment, Order
 from .base import BaseSync, SyncResult
 
 logger = logging.getLogger(__name__)
+
+# Session status constants
+STATUS_ACTIVE = "Active"
+STATUS_LOW_SESSIONS = "Low Sessions"
+STATUS_NEEDS_PACKAGE = "Needs Package"
+
+
+def determine_status(sessions_remaining: int) -> str:
+    """Determine client status based on remaining sessions."""
+    if sessions_remaining <= 0:
+        return STATUS_NEEDS_PACKAGE
+    elif sessions_remaining <= 2:
+        return STATUS_LOW_SESSIONS
+    return STATUS_ACTIVE
 
 
 class SessionsSync(BaseSync):
     """
     Sync client session tracking data to Notion.
 
-    This is the complex dashboard that calculates:
+    Calculates:
     - Sessions Purchased: Count of session packages bought
     - Sessions Used: Count of completed appointments
     - Sessions Remaining: Purchased - Used
@@ -47,14 +61,7 @@ class SessionsSync(BaseSync):
         days_back_appointments: int = 365,
         days_forward_appointments: int = 30,
     ) -> SyncResult:
-        """
-        Sync session tracking data for all clients.
-
-        Args:
-            account_codes: Accounts to sync (default: all)
-            days_back_appointments: Days of past appointments to count
-            days_forward_appointments: Days ahead for next appointment
-        """
+        """Sync session tracking data for all clients."""
         codes = self.get_account_codes(account_codes)
         result = SyncResult(
             success=True,
@@ -81,7 +88,6 @@ class SessionsSync(BaseSync):
         appt_start = now - timedelta(days=days_back_appointments)
         appt_end = now + timedelta(days=days_forward_appointments)
 
-        # Process each account
         for code in codes:
             client = self.square.get_client(code)
             if not client:
@@ -90,33 +96,55 @@ class SessionsSync(BaseSync):
             self.logger.info(f"Processing account: {code}")
 
             try:
-                # Get all customers for this account
+                # Bulk fetch all data upfront (avoids N+1)
                 customers = list(client.get_all_customers())
                 self.logger.info(f"Found {len(customers)} customers in {code}")
 
-                # Get all bookings for this account (for tandem detection and counting)
                 all_bookings = list(client.get_all_bookings(
                     start_at_min=appt_start,
                     start_at_max=appt_end,
                 ))
-
-                # Detect tandem appointments
                 all_bookings = self.square.detect_tandem_appointments(all_bookings)
 
-                # Group bookings by customer
+                # Bulk fetch all orders to count sessions (avoids per-customer N+1)
+                all_orders = []
+                cursor = None
+                while True:
+                    orders, cursor = client.search_orders(cursor=cursor)
+                    all_orders.extend(orders)
+                    if not cursor:
+                        break
+
+                # Bulk fetch recent payments (avoids per-customer N+1)
+                all_payments = list(client.get_all_payments())
+
+                # Group by customer
                 bookings_by_customer: Dict[str, List[Booking]] = defaultdict(list)
                 for booking in all_bookings:
                     if booking.customer_id:
                         bookings_by_customer[booking.customer_id].append(booking)
 
-                # Process each customer
+                orders_by_customer: Dict[str, List[Order]] = defaultdict(list)
+                for order in all_orders:
+                    if order.customer_id:
+                        orders_by_customer[order.customer_id].append(order)
+
+                payments_by_customer: Dict[str, List[Payment]] = defaultdict(list)
+                for payment in all_payments:
+                    if payment.customer_id:
+                        payments_by_customer[payment.customer_id].append(payment)
+
+                # Process each customer using pre-fetched data
                 for customer in customers:
                     try:
                         sync_data = self._calculate_session_data(
-                            client, customer, bookings_by_customer, now
+                            customer, bookings_by_customer,
+                            orders_by_customer, payments_by_customer, now
                         )
 
-                        self._sync_customer_sessions(db_id, customer, sync_data)
+                        _, was_created = self.notion.sync_client_session(
+                            db_id, customer, sync_data
+                        )
                         result.records_updated += 1
 
                     except Exception as e:
@@ -140,33 +168,33 @@ class SessionsSync(BaseSync):
 
     def _calculate_session_data(
         self,
-        square_client,
         customer: Customer,
         bookings_by_customer: Dict[str, List[Booking]],
+        orders_by_customer: Dict[str, List[Order]],
+        payments_by_customer: Dict[str, List[Payment]],
         now: datetime,
     ) -> Dict:
-        """Calculate all session tracking data for a customer."""
+        """Calculate all session tracking data for a customer using pre-fetched data."""
 
-        # Get sessions purchased (from orders)
-        sessions_purchased = square_client.count_session_purchases(
-            customer.id, self.session_item_name
-        )
+        # Count sessions purchased from orders
+        sessions_purchased = 0
+        for order in orders_by_customer.get(customer.id, []):
+            for item in order.line_items or []:
+                name = item.get("name", "")
+                if self.session_item_name.lower() in name.lower():
+                    sessions_purchased += int(item.get("quantity", "1"))
 
-        # Get bookings for this customer
+        # Count completed sessions from bookings
         customer_bookings = bookings_by_customer.get(customer.id, [])
-
-        # Count completed sessions
         sessions_used = sum(
             1 for b in customer_bookings
             if b.is_completed and b.start_at < now
         )
 
+        sessions_remaining = sessions_purchased - sessions_used
+
         # Check for tandem
-        has_tandem = any(
-            b.raw and b.raw.get("tandem", False)
-            for b in customer_bookings
-            if b.raw
-        )
+        has_tandem = any(b.is_tandem for b in customer_bookings)
 
         # Find last completed appointment
         past_bookings = [b for b in customer_bookings if b.start_at < now and b.is_completed]
@@ -176,67 +204,69 @@ class SessionsSync(BaseSync):
         future_bookings = [b for b in customer_bookings if b.start_at >= now]
         next_appointment = min(future_bookings, key=lambda b: b.start_at) if future_bookings else None
 
-        # Get last payment
-        last_payment = square_client.get_last_payment_for_customer(customer.id)
+        # Get last payment from pre-fetched data
+        customer_payments = payments_by_customer.get(customer.id, [])
+        last_payment = max(customer_payments, key=lambda p: p.created_at) if customer_payments else None
 
         return {
             "sessions_purchased": sessions_purchased,
             "sessions_used": sessions_used,
-            "sessions_remaining": sessions_purchased - sessions_used,
+            "sessions_remaining": sessions_remaining,
             "has_tandem": has_tandem,
+            "status": determine_status(sessions_remaining),
             "last_appointment": last_appointment,
             "next_appointment": next_appointment,
             "last_payment": last_payment,
         }
-
-    def _sync_customer_sessions(
-        self,
-        database_id: str,
-        customer: Customer,
-        sync_data: Dict,
-    ):
-        """Sync calculated session data to Notion."""
-
-        self.notion.sync_client_session(
-            database_id,
-            customer,
-            sessions_purchased=sync_data["sessions_purchased"],
-            sessions_used=sync_data["sessions_used"],
-            last_payment=sync_data["last_payment"],
-            last_appointment=sync_data["last_appointment"],
-            next_appointment=sync_data["next_appointment"],
-            tandem=sync_data["has_tandem"],
-        )
 
     def get_low_session_clients(
         self,
         account_codes: List[str] = None,
         threshold: int = 2,
     ) -> List[Dict]:
-        """
-        Get clients with low remaining sessions (for trainer view).
-
-        Args:
-            threshold: Clients with <= this many sessions remaining
-        """
+        """Get clients with low remaining sessions (for trainer view)."""
         codes = self.get_account_codes(account_codes)
         low_session_clients = []
+
+        now = datetime.utcnow()
 
         for code in codes:
             client = self.square.get_client(code)
             if not client:
                 continue
 
-            for customer in client.get_all_customers():
-                sessions_purchased = client.count_session_purchases(
-                    customer.id, self.session_item_name
-                )
+            # Bulk fetch once per account (NOT per customer)
+            customers = list(client.get_all_customers())
+            all_bookings = list(client.get_all_bookings())
+            all_orders = []
+            cursor = None
+            while True:
+                orders, cursor = client.search_orders(cursor=cursor)
+                all_orders.extend(orders)
+                if not cursor:
+                    break
 
-                # Count used sessions (simplified - just completed bookings)
-                bookings = list(client.get_all_bookings())
-                customer_bookings = [b for b in bookings if b.customer_id == customer.id]
+            # Group by customer
+            bookings_by_customer: Dict[str, List[Booking]] = defaultdict(list)
+            for b in all_bookings:
+                if b.customer_id:
+                    bookings_by_customer[b.customer_id].append(b)
+
+            orders_by_customer: Dict[str, List] = defaultdict(list)
+            for o in all_orders:
+                if o.customer_id:
+                    orders_by_customer[o.customer_id].append(o)
+
+            for customer in customers:
+                # Count sessions from pre-fetched orders
+                sessions_purchased = 0
+                for order in orders_by_customer.get(customer.id, []):
+                    for item in order.line_items or []:
+                        if self.session_item_name.lower() in item.get("name", "").lower():
+                            sessions_purchased += int(item.get("quantity", "1"))
+
+                customer_bookings = bookings_by_customer.get(customer.id, [])
                 sessions_used = sum(1 for b in customer_bookings if b.is_completed)
-
                 remaining = sessions_purchased - sessions_used
 
                 if remaining <= threshold:

@@ -92,20 +92,12 @@ class AppointmentsSync(BaseSync):
         # Sync each booking to Notion
         for booking in all_bookings:
             try:
-                existing = self.notion.find_page_by_property(
-                    self.appointments_db,
-                    "Booking ID",
-                    booking.id,
-                    property_type="title",
-                )
+                _, was_created = self.notion.sync_booking(self.appointments_db, booking)
 
-                is_tandem = booking.raw.get("tandem", False) if booking.raw else False
-                self.notion.sync_booking(self.appointments_db, booking, tandem=is_tandem)
-
-                if existing:
-                    result.records_updated += 1
-                else:
+                if was_created:
                     result.records_created += 1
+                else:
+                    result.records_updated += 1
 
             except Exception as e:
                 self.logger.error(f"Failed to sync booking {booking.id}: {e}")
@@ -152,7 +144,7 @@ class AppointmentsSync(BaseSync):
         tandem_by_date: Dict[str, List[Dict]] = defaultdict(list)
 
         for booking in all_bookings:
-            if booking.raw and booking.raw.get("tandem"):
+            if booking.is_tandem:
                 tandem_by_date[booking.date].append({
                     "booking_id": booking.id,
                     "customer_id": booking.customer_id,

@@ -75,6 +75,7 @@ class Booking:
     service_name: Optional[str] = None
     is_recurring: bool = False
     recurring_booking_id: Optional[str] = None
+    is_tandem: bool = False
     raw: Dict[str, Any] = None
 
     @property
@@ -113,6 +114,7 @@ class SquareClient:
     def __init__(self, account: AccountConfig, api_version: str = "2025-06-16"):
         self.account = account
         self.api_version = api_version
+        self._cached_location_id: Optional[str] = None
         self.session = requests.Session()
         self.session.headers.update({
             "Authorization": f"Bearer {account.access_token}",
@@ -120,6 +122,44 @@ class SquareClient:
             "Content-Type": "application/json",
             "Square-Version": api_version,
         })
+
+    def _parse_payment(self, p: Dict) -> Payment:
+        """Parse a raw Square payment dict into a Payment dataclass."""
+        return Payment(
+            id=p["id"],
+            account_code=self.account.code,
+            amount_cents=p.get("amount_money", {}).get("amount", 0),
+            currency=p.get("amount_money", {}).get("currency", "USD"),
+            status=p.get("status", "UNKNOWN"),
+            created_at=datetime.fromisoformat(p["created_at"].replace("Z", "+00:00")),
+            customer_id=p.get("customer_id"),
+            order_id=p.get("order_id"),
+            raw=p,
+        )
+
+    def _parse_customer(self, c: Dict) -> Customer:
+        """Parse a raw Square customer dict into a Customer dataclass."""
+        return Customer(
+            id=c["id"],
+            account_code=self.account.code,
+            given_name=c.get("given_name"),
+            family_name=c.get("family_name"),
+            email=c.get("email_address"),
+            phone=c.get("phone_number"),
+            created_at=datetime.fromisoformat(c["created_at"].replace("Z", "+00:00")) if c.get("created_at") else None,
+            raw=c,
+        )
+
+    def _get_location_id(self) -> Optional[str]:
+        """Get location ID, with caching."""
+        if self.account.location_id:
+            return self.account.location_id
+        if self._cached_location_id:
+            return self._cached_location_id
+        locations = self._get("/v2/locations").get("locations", [])
+        if locations:
+            self._cached_location_id = locations[0]["id"]
+        return self._cached_location_id
 
     @property
     def base_url(self) -> str:
@@ -160,21 +200,7 @@ class SquareClient:
             params["cursor"] = cursor
 
         data = self._get("/v2/payments", params)
-        payments = []
-
-        for p in data.get("payments", []):
-            payments.append(Payment(
-                id=p["id"],
-                account_code=self.account.code,
-                amount_cents=p.get("amount_money", {}).get("amount", 0),
-                currency=p.get("amount_money", {}).get("currency", "USD"),
-                status=p.get("status", "UNKNOWN"),
-                created_at=datetime.fromisoformat(p["created_at"].replace("Z", "+00:00")),
-                customer_id=p.get("customer_id"),
-                order_id=p.get("order_id"),
-                raw=p,
-            ))
-
+        payments = [self._parse_payment(p) for p in data.get("payments", [])]
         return payments, data.get("cursor")
 
     def get_all_payments(
@@ -201,18 +227,7 @@ class SquareClient:
         payments = data.get("payments", [])
         if not payments:
             return None
-        p = payments[0]
-        return Payment(
-            id=p["id"],
-            account_code=self.account.code,
-            amount_cents=p.get("amount_money", {}).get("amount", 0),
-            currency=p.get("amount_money", {}).get("currency", "USD"),
-            status=p.get("status", "UNKNOWN"),
-            created_at=datetime.fromisoformat(p["created_at"].replace("Z", "+00:00")),
-            customer_id=p.get("customer_id"),
-            order_id=p.get("order_id"),
-            raw=p,
-        )
+        return self._parse_payment(payments[0])
 
     # ─────────────────────────────────────────────────────────────
     # INVOICES
@@ -224,14 +239,7 @@ class SquareClient:
         if cursor:
             params["cursor"] = cursor
 
-        # Invoices require location_id
-        location_id = self.account.location_id
-        if not location_id:
-            # Try to get first location
-            locations = self._get("/v2/locations").get("locations", [])
-            if locations:
-                location_id = locations[0]["id"]
-
+        location_id = self._get_location_id()
         if not location_id:
             logger.warning(f"No location_id for account {self.account.code}, skipping invoices")
             return [], None
@@ -266,20 +274,7 @@ class SquareClient:
             params["cursor"] = cursor
 
         data = self._get("/v2/customers", params)
-        customers = []
-
-        for c in data.get("customers", []):
-            customers.append(Customer(
-                id=c["id"],
-                account_code=self.account.code,
-                given_name=c.get("given_name"),
-                family_name=c.get("family_name"),
-                email=c.get("email_address"),
-                phone=c.get("phone_number"),
-                created_at=datetime.fromisoformat(c["created_at"].replace("Z", "+00:00")) if c.get("created_at") else None,
-                raw=c,
-            ))
-
+        customers = [self._parse_customer(c) for c in data.get("customers", [])]
         return customers, data.get("cursor")
 
     def get_all_customers(self) -> Iterator[Customer]:
@@ -298,16 +293,7 @@ class SquareClient:
             c = data.get("customer")
             if not c:
                 return None
-            return Customer(
-                id=c["id"],
-                account_code=self.account.code,
-                given_name=c.get("given_name"),
-                family_name=c.get("family_name"),
-                email=c.get("email_address"),
-                phone=c.get("phone_number"),
-                created_at=datetime.fromisoformat(c["created_at"].replace("Z", "+00:00")) if c.get("created_at") else None,
-                raw=c,
-            )
+            return self._parse_customer(c)
         except requests.HTTPError as e:
             if e.response.status_code == 404:
                 return None
@@ -353,8 +339,8 @@ class SquareClient:
                 status=b.get("status", "UNKNOWN"),
                 location_id=b.get("location_id"),
                 staff_member_id=b.get("team_member_id"),
-                is_recurring="recurring" in b.get("booking_id", "").lower() or b.get("all_day") is False,
-                recurring_booking_id=b.get("source", {}).get("name"),  # May contain recurring info
+                is_recurring=b.get("transition_time_minutes") is not None or b.get("appointment_segments", [{}])[0].get("intermission_minutes") is not None,
+                recurring_booking_id=b.get("source", {}).get("name"),
                 raw=b,
             ))
 
@@ -525,19 +511,14 @@ class MultiAccountClient:
             sorted_bookings = sorted(day_bookings, key=lambda x: x.start_at)
 
             for i, booking in enumerate(sorted_bookings):
-                for j, other in enumerate(sorted_bookings):
-                    if i == j:
-                        continue
+                for j in range(i + 1, len(sorted_bookings)):
+                    other = sorted_bookings[j]
                     if booking.customer_id == other.customer_id:
                         continue
 
-                    # Check time overlap
                     time_diff = abs((booking.start_at - other.start_at).total_seconds() / 60)
                     if time_diff <= threshold_minutes:
-                        # Mark both as tandem
-                        booking.raw = booking.raw or {}
-                        booking.raw["tandem"] = True
-                        other.raw = other.raw or {}
-                        other.raw["tandem"] = True
+                        booking.is_tandem = True
+                        other.is_tandem = True
 
         return bookings

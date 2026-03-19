@@ -6,7 +6,7 @@ Uses APScheduler for reliable scheduling with timezone support.
 
 import logging
 from datetime import datetime
-from typing import Callable, List, Optional
+from typing import Callable, List
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR, JobExecutionEvent
@@ -171,46 +171,3 @@ class SyncScheduler:
             logger.info(f"Resumed sync job '{name}'")
 
 
-class SyncRunner:
-    """
-    Convenience class to run syncs with logging and error handling.
-    """
-
-    def __init__(self, name: str):
-        self.name = name
-        self.logger = logging.getLogger(f"sync.{name}")
-
-    def run(self, sync_func: Callable, *args, **kwargs) -> dict:
-        """
-        Run a sync function with timing and error handling.
-
-        Returns dict with status, duration, and any errors.
-        """
-        start_time = datetime.utcnow()
-        self.logger.info(f"Starting {self.name} sync")
-
-        try:
-            result = sync_func(*args, **kwargs)
-            duration = (datetime.utcnow() - start_time).total_seconds()
-
-            self.logger.info(f"Completed {self.name} sync in {duration:.2f}s")
-
-            return {
-                "status": "success",
-                "name": self.name,
-                "duration_seconds": duration,
-                "started_at": start_time.isoformat(),
-                "result": result,
-            }
-
-        except Exception as e:
-            duration = (datetime.utcnow() - start_time).total_seconds()
-            self.logger.error(f"Failed {self.name} sync after {duration:.2f}s: {e}")
-
-            return {
-                "status": "error",
-                "name": self.name,
-                "duration_seconds": duration,
-                "started_at": start_time.isoformat(),
-                "error": str(e),
-            }

@@ -154,12 +154,13 @@ class NotionClient:
         unique_property: str,
         unique_value: str,
         unique_type: str = "rich_text",
-    ) -> Dict:
+    ) -> tuple[Dict, bool]:
         """
         Create or update a page based on a unique property.
 
-        If a page with the unique property value exists, update it.
-        Otherwise, create a new page.
+        Returns:
+            Tuple of (API response dict, was_created: bool).
+            was_created is True if a new page was created, False if updated.
         """
         existing = self.find_page_by_property(
             database_id, unique_property, unique_value, unique_type
@@ -167,10 +168,10 @@ class NotionClient:
 
         if existing:
             logger.debug(f"Updating existing page {existing.id}")
-            return self.update_page(existing.id, properties)
+            return self.update_page(existing.id, properties), False
         else:
             logger.debug(f"Creating new page with {unique_property}={unique_value}")
-            return self.create_page(database_id, properties)
+            return self.create_page(database_id, properties), True
 
     # ─────────────────────────────────────────────────────────────
     # PROPERTY BUILDERS
@@ -254,7 +255,7 @@ class NotionClient:
             unique_value=customer.id,
         )
 
-    def sync_payment(self, database_id: str, payment: Payment) -> Dict:
+    def sync_payment(self, database_id: str, payment: Payment) -> tuple[Dict, bool]:
         """Sync a payment/transaction to Notion."""
         amount_dollars = payment.amount_cents / 100.0
 
@@ -277,8 +278,8 @@ class NotionClient:
             unique_type="title",
         )
 
-    def sync_booking(self, database_id: str, booking: Booking, tandem: bool = False) -> Dict:
-        """Sync a booking/appointment to Notion."""
+    def sync_booking(self, database_id: str, booking: Booking) -> tuple[Dict, bool]:
+        """Sync a booking/appointment to Notion. Returns (response, was_created)."""
         properties = {
             "Booking ID": self.title(booking.id),
             "Account": self.select(booking.account_code),
@@ -287,7 +288,7 @@ class NotionClient:
             "Time": self.rich_text(booking.time),
             "Status": self.select(booking.status),
             "Completed": self.checkbox(booking.is_completed),
-            "Tandem": self.checkbox(tandem or booking.raw.get("tandem", False) if booking.raw else False),
+            "Tandem": self.checkbox(booking.is_tandem),
             "Recurring": self.checkbox(booking.is_recurring),
             "Last Synced": self.date(datetime.utcnow()),
         }
@@ -304,47 +305,39 @@ class NotionClient:
         self,
         database_id: str,
         customer: Customer,
-        sessions_purchased: int,
-        sessions_used: int,
-        last_payment: Optional[Payment] = None,
-        last_appointment: Optional[Booking] = None,
-        next_appointment: Optional[Booking] = None,
-        tandem: bool = False,
-    ) -> Dict:
-        """Sync client session tracking data to Notion."""
-        sessions_remaining = sessions_purchased - sessions_used
+        session_data: Dict[str, Any],
+    ) -> tuple[Dict, bool]:
+        """Sync client session tracking data to Notion. Returns (response, was_created).
 
+        session_data should contain: sessions_purchased, sessions_used, sessions_remaining,
+        has_tandem, status, and optional last_payment, last_appointment, next_appointment.
+        """
         properties = {
             "Name": self.title(customer.full_name),
             "Square ID": self.rich_text(customer.id),
             "Account": self.select(customer.account_code),
             "Email": self.email(customer.email) if customer.email else {"email": None},
             "Phone": self.phone(customer.phone) if customer.phone else {"phone_number": None},
-            "Sessions Purchased": self.number(sessions_purchased),
-            "Sessions Used": self.number(sessions_used),
-            "Sessions Remaining": self.number(sessions_remaining),
-            "Tandem": self.checkbox(tandem),
+            "Sessions Purchased": self.number(session_data["sessions_purchased"]),
+            "Sessions Used": self.number(session_data["sessions_used"]),
+            "Sessions Remaining": self.number(session_data["sessions_remaining"]),
+            "Tandem": self.checkbox(session_data.get("has_tandem", False)),
+            "Status": self.select(session_data["status"]),
             "Last Synced": self.date(datetime.utcnow()),
         }
 
+        last_payment = session_data.get("last_payment")
         if last_payment:
             properties["Last Payment Date"] = self.date(last_payment.created_at)
             properties["Last Payment Amount"] = self.number(last_payment.amount_cents / 100.0)
 
+        last_appointment = session_data.get("last_appointment")
         if last_appointment:
             properties["Last Appointment"] = self.date(last_appointment.start_at)
 
+        next_appointment = session_data.get("next_appointment")
         if next_appointment:
             properties["Next Appointment"] = self.date(next_appointment.start_at)
-
-        # Determine status based on remaining sessions
-        if sessions_remaining <= 0:
-            status = "Needs Package"
-        elif sessions_remaining <= 2:
-            status = "Low Sessions"
-        else:
-            status = "Active"
-        properties["Status"] = self.select(status)
 
         return self.upsert_page(
             database_id,
@@ -353,7 +346,7 @@ class NotionClient:
             unique_value=customer.id,
         )
 
-    def sync_invoice(self, database_id: str, invoice: Invoice) -> Dict:
+    def sync_invoice(self, database_id: str, invoice: Invoice) -> tuple[Dict, bool]:
         """Sync an invoice to Notion."""
         amount_dollars = invoice.amount_cents / 100.0
 

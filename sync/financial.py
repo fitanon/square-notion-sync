@@ -63,21 +63,11 @@ class FinancialSync(BaseSync):
         self.logger.info(f"Starting financial sync for accounts: {codes}")
         self.logger.info(f"Date range: {begin_time.date()} to {end_time.date()}")
 
-        # Sync transactions
         if self.transactions_db:
-            tx_result = self._sync_transactions(codes, begin_time, end_time)
-            result.records_created += tx_result.get("created", 0)
-            result.records_updated += tx_result.get("updated", 0)
-            result.records_failed += tx_result.get("failed", 0)
-            result.errors.extend(tx_result.get("errors", []))
+            result.merge_stats(self._sync_transactions(codes, begin_time, end_time))
 
-        # Sync invoices
         if self.invoices_db:
-            inv_result = self._sync_invoices(codes)
-            result.records_created += inv_result.get("created", 0)
-            result.records_updated += inv_result.get("updated", 0)
-            result.records_failed += inv_result.get("failed", 0)
-            result.errors.extend(inv_result.get("errors", []))
+            result.merge_stats(self._sync_invoices(codes))
 
         result.success = result.records_failed == 0 and len(result.errors) == 0
         result.complete()
@@ -104,19 +94,12 @@ class FinancialSync(BaseSync):
             account_codes=account_codes,
         ):
             try:
-                existing = self.notion.find_page_by_property(
-                    self.transactions_db,
-                    "Payment ID",
-                    payment.id,
-                    property_type="title",
-                )
+                _, was_created = self.notion.sync_payment(self.transactions_db, payment)
 
-                self.notion.sync_payment(self.transactions_db, payment)
-
-                if existing:
-                    stats["updated"] += 1
-                else:
+                if was_created:
                     stats["created"] += 1
+                else:
+                    stats["updated"] += 1
 
             except Exception as e:
                 self.logger.error(f"Failed to sync payment {payment.id}: {e}")
@@ -139,19 +122,12 @@ class FinancialSync(BaseSync):
 
                 for invoice in invoices:
                     try:
-                        existing = self.notion.find_page_by_property(
-                            self.invoices_db,
-                            "Invoice ID",
-                            invoice.id,
-                            property_type="title",
-                        )
+                        _, was_created = self.notion.sync_invoice(self.invoices_db, invoice)
 
-                        self.notion.sync_invoice(self.invoices_db, invoice)
-
-                        if existing:
-                            stats["updated"] += 1
-                        else:
+                        if was_created:
                             stats["created"] += 1
+                        else:
+                            stats["updated"] += 1
 
                     except Exception as e:
                         self.logger.error(f"Failed to sync invoice {invoice.id}: {e}")

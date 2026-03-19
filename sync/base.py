@@ -32,6 +32,13 @@ class SyncResult:
         self.completed_at = datetime.utcnow()
         self.duration_seconds = (self.completed_at - self.started_at).total_seconds()
 
+    def merge_stats(self, stats: dict):
+        """Merge sub-result stats into this result."""
+        self.records_created += stats.get("created", 0)
+        self.records_updated += stats.get("updated", 0)
+        self.records_failed += stats.get("failed", 0)
+        self.errors.extend(stats.get("errors", []))
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for API response."""
         return {
