@@ -19,6 +19,7 @@ from datetime import datetime
 from core.config import Config
 from core.scheduler import SyncScheduler
 from sync import FinancialSync, AppointmentsSync, SessionsSync
+from api.portal import register_portal_routes
 
 # Configure logging
 logging.basicConfig(
@@ -75,6 +76,7 @@ def create_app() -> FastAPI:
     )
 
     register_routes(app)
+    register_portal_routes(app)
     return app
 
 
