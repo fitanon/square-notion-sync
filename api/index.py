@@ -23,17 +23,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Brand colors - The Fit Clinic
-BRAND = {
-    "primary": "#C9A227",      # Gold
-    "primary_dark": "#A8871F",
-    "secondary": "#252525",    # Dark charcoal
-    "accent": "#C9A227",       # Gold accent
-    "success": "#4CAF50",
-    "warning": "#C9A227",
-    "danger": "#E53935",
-    "light": "#F5F5F5",
-    "dark": "#1A1A1A",         # Near black
+# Minimalist design system - contrarian to Notion
+THEME = {
+    "bg": "#FAFAFA",           # Off-white
+    "fg": "#0A0A0A",           # Near black
+    "muted": "#737373",        # Gray
+    "border": "#E5E5E5",       # Light border
+    "accent": "#0A0A0A",       # Black accent
+    "success": "#22C55E",
+    "warning": "#F59E0B",
+    "danger": "#EF4444",
 }
 
 
@@ -197,477 +196,357 @@ async def health():
 
 
 def get_setup_html() -> str:
-    """Setup instructions page with The Fit Clinic branding."""
+    """Setup instructions - minimalist design."""
     return f'''<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Setup Required | The Fit Clinic</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Setup</title>
     <style>
         * {{ box-sizing: border-box; margin: 0; padding: 0; }}
         body {{
-            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: {BRAND["dark"]};
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: {THEME["bg"]};
+            color: {THEME["fg"]};
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            color: white;
+            padding: 80px 24px;
+            line-height: 1.6;
         }}
         .container {{
-            background: {BRAND["secondary"]};
-            border-radius: 4px;
-            padding: 50px;
-            max-width: 550px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.05);
-            position: relative;
+            max-width: 480px;
+            margin: 0 auto;
         }}
-        .container::before {{
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
-            background: {BRAND["primary"]};
-        }}
-        .brand {{
-            text-align: center;
-            margin-bottom: 35px;
-        }}
-        .brand-name {{
-            font-size: 20px;
-            font-weight: 800;
-            color: white;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-        }}
-        .brand-tagline {{
-            color: {BRAND["primary"]};
-            font-size: 9px;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            margin-top: 8px;
+        .logo {{
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 48px;
+            color: {THEME["muted"]};
         }}
         h1 {{
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 18px;
+            font-size: 32px;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
         }}
-        .subtitle {{
-            text-align: center;
-            color: #666;
-            margin-bottom: 35px;
-            font-size: 13px;
+        .desc {{
+            color: {THEME["muted"]};
+            font-size: 15px;
+            margin-bottom: 48px;
+        }}
+        .steps {{
+            border-top: 1px solid {THEME["border"]};
         }}
         .step {{
-            background: rgba(0,0,0,0.3);
-            border-radius: 2px;
-            padding: 20px;
-            margin-bottom: 12px;
-            border-left: 3px solid {BRAND["primary"]};
+            padding: 24px 0;
+            border-bottom: 1px solid {THEME["border"]};
+            display: grid;
+            grid-template-columns: 24px 1fr;
+            gap: 16px;
         }}
         .step-num {{
-            display: inline-block;
-            width: 24px;
-            height: 24px;
-            background: {BRAND["primary"]};
-            color: {BRAND["dark"]};
-            border-radius: 2px;
-            text-align: center;
-            line-height: 24px;
-            font-weight: 700;
-            font-size: 12px;
-            margin-right: 12px;
-        }}
-        .step-title {{
-            font-weight: 600;
             font-size: 13px;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-weight: 500;
+            color: {THEME["muted"]};
         }}
-        .step-desc {{
-            color: #888;
-            font-size: 13px;
-            margin-left: 36px;
+        .step-content h3 {{
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }}
+        .step-content p {{
+            font-size: 14px;
+            color: {THEME["muted"]};
         }}
         code {{
-            background: rgba(201,162,39,0.15);
-            color: {BRAND["primary"]};
-            padding: 2px 8px;
-            border-radius: 2px;
-            font-family: 'SF Mono', Monaco, monospace;
-            font-size: 12px;
+            font-family: "SF Mono", Monaco, "Consolas", monospace;
+            font-size: 13px;
+            background: {THEME["border"]};
+            padding: 2px 6px;
+            border-radius: 4px;
         }}
-        .env-list {{
-            margin-top: 10px;
-            margin-left: 36px;
+        .env-vars {{
+            margin-top: 12px;
+            padding: 16px;
+            background: {THEME["fg"]};
+            color: {THEME["bg"]};
+            border-radius: 8px;
+            font-family: "SF Mono", Monaco, monospace;
+            font-size: 13px;
+            line-height: 1.8;
         }}
-        .env-list li {{
-            color: #777;
-            font-size: 12px;
-            margin-bottom: 6px;
-            list-style: none;
-        }}
-        .env-list li::before {{
-            content: "—";
-            color: {BRAND["primary"]};
-            margin-right: 10px;
-        }}
+        .env-vars .key {{ color: #A5D6FF; }}
+        .env-vars .val {{ color: #7EE787; }}
         .footer {{
-            text-align: center;
-            margin-top: 30px;
-            color: #555;
-            font-size: 11px;
-            letter-spacing: 1px;
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid {THEME["border"]};
+            font-size: 13px;
+            color: {THEME["muted"]};
         }}
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="brand">
-            <div class="brand-name">The Fit Clinic</div>
-            <div class="brand-tagline">Training & Nutrition</div>
-        </div>
-        <h1>Setup Required</h1>
-        <p class="subtitle">Configure environment variables to activate the portal</p>
+        <div class="logo">fit clinic</div>
+        <h1>Setup required</h1>
+        <p class="desc">Configure your environment to activate the portal.</p>
 
-        <div class="step">
-            <div class="step-title">
+        <div class="steps">
+            <div class="step">
                 <span class="step-num">1</span>
-                Go to Vercel Dashboard
+                <div class="step-content">
+                    <h3>Open Vercel settings</h3>
+                    <p>Go to your project → Settings → Environment Variables</p>
+                </div>
             </div>
-            <div class="step-desc">
-                Open your project settings at <code>vercel.com</code>
-            </div>
-        </div>
-
-        <div class="step">
-            <div class="step-title">
+            <div class="step">
                 <span class="step-num">2</span>
-                Add Environment Variables
+                <div class="step-content">
+                    <h3>Add variables</h3>
+                    <div class="env-vars">
+                        <span class="key">NOTION_TOKEN</span>=<span class="val">secret_xxx</span><br>
+                        <span class="key">NOTION_DB_SESSIONS</span>=<span class="val">database_id</span>
+                    </div>
+                </div>
             </div>
-            <div class="step-desc">
-                Settings → Environment Variables → Add:
-            </div>
-            <ul class="env-list">
-                <li><code>NOTION_TOKEN</code> — Your Notion integration token</li>
-                <li><code>NOTION_DB_SESSIONS</code> — Sessions database ID</li>
-                <li><code>NOTION_DB_CLIENTS</code> — Clients database ID (optional)</li>
-            </ul>
-        </div>
-
-        <div class="step">
-            <div class="step-title">
+            <div class="step">
                 <span class="step-num">3</span>
-                Redeploy
-            </div>
-            <div class="step-desc">
-                Deployments → Click latest → Redeploy
+                <div class="step-content">
+                    <h3>Redeploy</h3>
+                    <p>Deployments → Latest → Redeploy</p>
+                </div>
             </div>
         </div>
 
-        <p class="footer">Portal will activate automatically once configured</p>
+        <p class="footer">Portal activates automatically after configuration.</p>
     </div>
 </body>
 </html>'''
 
 
 def get_portal_html() -> str:
-    """Main portal HTML with The Fit Clinic brand styling."""
+    """Main portal HTML - minimalist, contrarian design."""
     return f'''<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Session Balance | The Fit Clinic</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Sessions</title>
     <style>
         * {{ box-sizing: border-box; margin: 0; padding: 0; }}
         body {{
-            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: {BRAND["dark"]};
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: {THEME["bg"]};
+            color: {THEME["fg"]};
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            padding: 80px 24px;
+            line-height: 1.5;
         }}
         .container {{
-            background: {BRAND["secondary"]};
-            border-radius: 4px;
-            padding: 50px 45px;
-            max-width: 420px;
-            width: 100%;
-            box-shadow: 0 25px 80px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.05);
-            position: relative;
+            max-width: 400px;
+            margin: 0 auto;
         }}
-        .container::before {{
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
-            background: {BRAND["primary"]};
-        }}
-        .brand {{
-            text-align: center;
-            margin-bottom: 30px;
-        }}
-        .brand-name {{
-            font-size: 22px;
-            font-weight: 800;
-            color: white;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-        }}
-        .brand-tagline {{
-            color: {BRAND["primary"]};
-            font-size: 10px;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            margin-top: 8px;
+        .logo {{
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: {THEME["muted"]};
+            margin-bottom: 48px;
         }}
         h1 {{
-            text-align: center;
-            color: white;
-            margin-bottom: 8px;
-            font-size: 20px;
+            font-size: 32px;
             font-weight: 600;
-            letter-spacing: 1px;
-            text-transform: uppercase;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
         }}
-        .tagline {{
-            text-align: center;
-            color: #666;
-            margin-bottom: 35px;
-            font-size: 13px;
-            letter-spacing: 0.5px;
+        .subtitle {{
+            color: {THEME["muted"]};
+            font-size: 15px;
+            margin-bottom: 40px;
         }}
-        .form-group {{ margin-bottom: 18px; }}
+        .form-group {{
+            margin-bottom: 20px;
+        }}
         label {{
             display: block;
+            font-size: 14px;
+            font-weight: 500;
             margin-bottom: 8px;
-            color: {BRAND["primary"]};
-            font-weight: 600;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            color: {THEME["fg"]};
         }}
         input {{
             width: 100%;
-            padding: 16px 18px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 2px;
-            font-size: 15px;
-            color: white;
-            font-family: 'Montserrat', sans-serif;
-            transition: all 0.3s;
+            padding: 14px 16px;
+            font-size: 16px;
+            border: 1px solid {THEME["border"]};
+            border-radius: 8px;
+            background: white;
+            color: {THEME["fg"]};
+            font-family: inherit;
+            transition: border-color 0.15s;
         }}
-        input::placeholder {{ color: #555; }}
+        input::placeholder {{
+            color: {THEME["muted"]};
+        }}
         input:focus {{
             outline: none;
-            border-color: {BRAND["primary"]};
-            background: rgba(201,162,39,0.05);
+            border-color: {THEME["fg"]};
         }}
-        .or-divider {{
+        .divider {{
             text-align: center;
-            color: #444;
+            color: {THEME["muted"]};
+            font-size: 13px;
             margin: 20px 0;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
             position: relative;
         }}
-        .or-divider::before,
-        .or-divider::after {{
+        .divider::before, .divider::after {{
             content: "";
             position: absolute;
             top: 50%;
-            width: 40%;
+            width: 45%;
             height: 1px;
-            background: {BRAND["primary"]};
-            opacity: 0.3;
+            background: {THEME["border"]};
         }}
-        .or-divider::before {{ left: 0; }}
-        .or-divider::after {{ right: 0; }}
+        .divider::before {{ left: 0; }}
+        .divider::after {{ right: 0; }}
         button {{
             width: 100%;
-            padding: 16px;
-            background: {BRAND["primary"]};
-            color: {BRAND["dark"]};
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 500;
+            background: {THEME["fg"]};
+            color: {THEME["bg"]};
             border: none;
-            border-radius: 2px;
-            font-size: 13px;
-            font-weight: 700;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-top: 10px;
-            font-family: 'Montserrat', sans-serif;
+            font-family: inherit;
+            transition: opacity 0.15s;
+            margin-top: 8px;
         }}
-        button:hover {{
-            background: #D4AD2E;
-            box-shadow: 0 10px 30px rgba(201,162,39,0.3);
-        }}
-        button:active {{ transform: translateY(0); }}
+        button:hover {{ opacity: 0.9; }}
         button:disabled {{
-            opacity: 0.6;
+            opacity: 0.5;
             cursor: not-allowed;
-            box-shadow: none;
         }}
-        .result {{ margin-top: 30px; display: none; }}
-        .result.show {{ display: block; animation: fadeIn 0.4s ease; }}
+        .result {{
+            display: none;
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 1px solid {THEME["border"]};
+            animation: fadeIn 0.3s ease;
+        }}
+        .result.show {{ display: block; }}
         @keyframes fadeIn {{
-            from {{ opacity: 0; transform: translateY(10px); }}
+            from {{ opacity: 0; transform: translateY(8px); }}
             to {{ opacity: 1; transform: translateY(0); }}
         }}
-        .result-card {{
-            background: rgba(0,0,0,0.3);
-            border-radius: 2px;
-            padding: 35px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.05);
-        }}
         .client-name {{
-            font-size: 18px;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 25px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            font-size: 14px;
+            font-weight: 500;
+            color: {THEME["muted"]};
+            margin-bottom: 8px;
         }}
-        .sessions-display {{
-            margin: 0 auto 25px;
-            position: relative;
-        }}
-        .sessions-number {{
-            font-size: 72px;
-            font-weight: 800;
-            color: {BRAND["primary"]};
+        .sessions-count {{
+            font-size: 96px;
+            font-weight: 600;
+            letter-spacing: -4px;
             line-height: 1;
+            margin-bottom: 4px;
         }}
         .sessions-label {{
-            font-size: 10px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            margin-top: 10px;
+            font-size: 14px;
+            color: {THEME["muted"]};
+            margin-bottom: 32px;
         }}
-        .gold-line {{
-            width: 60px;
-            height: 2px;
-            background: {BRAND["primary"]};
-            margin: 20px auto;
-        }}
-        .status-badge {{
+        .status {{
             display: inline-block;
-            padding: 8px 24px;
-            border-radius: 2px;
-            font-size: 10px;
-            font-weight: 700;
-            margin-bottom: 25px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 100px;
+            margin-bottom: 32px;
         }}
-        .status-active {{ background: rgba(76,175,80,0.15); color: {BRAND["success"]}; border: 1px solid rgba(76,175,80,0.3); }}
-        .status-low {{ background: rgba(201,162,39,0.15); color: {BRAND["primary"]}; border: 1px solid rgba(201,162,39,0.3); }}
-        .status-needs {{ background: rgba(229,57,53,0.15); color: {BRAND["danger"]}; border: 1px solid rgba(229,57,53,0.3); }}
-        .stats-grid {{
+        .status-active {{
+            background: rgba(34, 197, 94, 0.1);
+            color: {THEME["success"]};
+        }}
+        .status-low {{
+            background: rgba(245, 158, 11, 0.1);
+            color: {THEME["warning"]};
+        }}
+        .status-empty {{
+            background: rgba(239, 68, 68, 0.1);
+            color: {THEME["danger"]};
+        }}
+        .stats {{
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 1px;
+            background: {THEME["border"]};
+            border-radius: 8px;
+            overflow: hidden;
         }}
-        .stat-box {{
-            background: rgba(0,0,0,0.2);
-            border-radius: 2px;
-            padding: 18px 15px;
-            border: 1px solid rgba(255,255,255,0.05);
+        .stat {{
+            background: white;
+            padding: 20px;
+            text-align: center;
         }}
         .stat-value {{
-            font-size: 28px;
-            font-weight: 700;
-            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
         }}
         .stat-label {{
-            font-size: 9px;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-top: 5px;
+            font-size: 12px;
+            color: {THEME["muted"]};
         }}
-        .error {{
-            background: rgba(229,57,53,0.1);
-            color: {BRAND["danger"]};
-            padding: 25px;
-            border-radius: 2px;
+        .meta {{
+            margin-top: 24px;
+            font-size: 12px;
+            color: {THEME["muted"]};
             text-align: center;
-            border: 1px solid rgba(229,57,53,0.2);
-            font-size: 14px;
         }}
-        .last-sync {{
-            text-align: center;
-            font-size: 10px;
-            color: #555;
-            margin-top: 20px;
-            letter-spacing: 1px;
-        }}
-        .reset-btn {{
+        .reset {{
             background: transparent;
-            border: 1px solid rgba(255,255,255,0.15);
-            color: #888;
-            margin-top: 20px;
-            font-size: 11px;
+            color: {THEME["muted"]};
+            border: 1px solid {THEME["border"]};
+            margin-top: 24px;
         }}
-        .reset-btn:hover {{
-            background: rgba(255,255,255,0.05);
-            box-shadow: none;
-            color: white;
-            border-color: rgba(255,255,255,0.3);
+        .reset:hover {{
+            background: {THEME["border"]};
+            color: {THEME["fg"]};
+            opacity: 1;
+        }}
+        .error-box {{
+            padding: 16px;
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.1);
+            border-radius: 8px;
+            color: {THEME["danger"]};
+            font-size: 14px;
+            text-align: center;
         }}
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="brand">
-            <div class="brand-name">The Fit Clinic</div>
-            <div class="brand-tagline">Training & Nutrition</div>
-        </div>
-        <h1>Session Balance</h1>
-        <p class="tagline">Check your remaining training sessions</p>
+        <div class="logo">fit clinic</div>
+        <h1>Check sessions</h1>
+        <p class="subtitle">Enter your phone or email to view your balance.</p>
 
         <form id="lookupForm">
             <div class="form-group">
-                <label for="phone">Phone Number</label>
-                <input type="tel" id="phone" placeholder="(555) 123-4567">
+                <label for="phone">Phone number</label>
+                <input type="tel" id="phone" placeholder="(555) 123-4567" autocomplete="tel">
             </div>
-            <div class="or-divider">or</div>
+            <div class="divider">or</div>
             <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" placeholder="you@example.com">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
             </div>
-            <button type="submit" id="submitBtn">Check Balance</button>
+            <button type="submit" id="submitBtn">Look up</button>
         </form>
 
         <div class="result" id="result"></div>
@@ -684,7 +563,7 @@ def get_portal_html() -> str:
             const email = document.getElementById('email').value.trim();
 
             if (!phone && !email) {{
-                showError('Please enter your phone number or email.');
+                showError('Enter your phone number or email.');
                 return;
             }}
 
@@ -709,55 +588,52 @@ def get_portal_html() -> str:
                 }}
                 showResult(data);
             }} catch (err) {{
-                showError('Connection error. Please try again.');
+                showError('Connection error. Try again.');
             }} finally {{
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Check Balance';
+                submitBtn.textContent = 'Look up';
             }}
         }});
 
         function showError(message) {{
-            result.innerHTML = `<div class="error">${{message}}</div>
-                <button class="reset-btn" onclick="resetForm()">Try Again</button>`;
+            result.innerHTML = `
+                <div class="error-box">${{message}}</div>
+                <button class="reset" onclick="resetForm()">Try again</button>
+            `;
             result.classList.add('show');
         }}
 
         function showResult(data) {{
             const c = data.client;
             const remaining = c.sessions_remaining;
+
             let statusClass = 'status-active';
             let statusText = 'Active';
-
             if (remaining <= 0) {{
-                statusClass = 'status-needs';
-                statusText = 'Needs Sessions';
+                statusClass = 'status-empty';
+                statusText = 'No sessions';
             }} else if (remaining <= 3) {{
                 statusClass = 'status-low';
-                statusText = 'Low Balance';
+                statusText = 'Running low';
             }}
 
             result.innerHTML = `
-                <div class="result-card">
-                    <div class="client-name">${{c.name}}</div>
-                    <div class="sessions-display">
-                        <div class="sessions-number">${{remaining}}</div>
-                        <div class="sessions-label">Sessions Remaining</div>
+                <div class="client-name">${{c.name}}</div>
+                <div class="sessions-count">${{remaining}}</div>
+                <div class="sessions-label">sessions remaining</div>
+                <div class="status ${{statusClass}}">${{statusText}}</div>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value">${{c.sessions_purchased}}</div>
+                        <div class="stat-label">Purchased</div>
                     </div>
-                    <div class="gold-line"></div>
-                    <div class="status-badge ${{statusClass}}">${{statusText}}</div>
-                    <div class="stats-grid">
-                        <div class="stat-box">
-                            <div class="stat-value">${{c.sessions_purchased}}</div>
-                            <div class="stat-label">Purchased</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-value">${{c.sessions_used}}</div>
-                            <div class="stat-label">Used</div>
-                        </div>
+                    <div class="stat">
+                        <div class="stat-value">${{c.sessions_used}}</div>
+                        <div class="stat-label">Used</div>
                     </div>
-                    ${{c.last_synced ? `<div class="last-sync">Updated ${{formatDate(c.last_synced)}}</div>` : ''}}
                 </div>
-                <button class="reset-btn" onclick="resetForm()">Check Another</button>
+                ${{c.last_synced ? `<div class="meta">Updated ${{formatDate(c.last_synced)}}</div>` : ''}}
+                <button class="reset" onclick="resetForm()">Check another</button>
             `;
             result.classList.add('show');
         }}
@@ -776,7 +652,7 @@ def get_portal_html() -> str:
             const diff = Math.floor((now - d) / (1000 * 60 * 60 * 24));
             if (diff === 0) return 'today';
             if (diff === 1) return 'yesterday';
-            if (diff < 7) return `${{diff}} days ago`;
+            if (diff < 7) return diff + ' days ago';
             return d.toLocaleDateString('en-US', {{ month: 'short', day: 'numeric' }});
         }}
     </script>

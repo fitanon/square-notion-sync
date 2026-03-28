@@ -41,6 +41,21 @@ class NotionConfig:
 
 
 @dataclass
+class StripeConfig:
+    """Configuration for Stripe payments."""
+    secret_key: str
+    publishable_key: Optional[str] = None
+    webhook_secret: Optional[str] = None
+
+    # Product/Price IDs for tiered pricing
+    prices: Dict[str, str] = field(default_factory=dict)  # e.g., {"1_session": "price_xxx"}
+
+    @property
+    def is_test_mode(self) -> bool:
+        return self.secret_key.startswith("sk_test_")
+
+
+@dataclass
 class SyncConfig:
     """Configuration for sync scheduling."""
     timezone: str = "America/New_York"
@@ -54,6 +69,7 @@ class Config:
     """Main configuration container."""
     accounts: Dict[str, AccountConfig] = field(default_factory=dict)
     notion: Optional[NotionConfig] = None
+    stripe: Optional[StripeConfig] = None
     sync: SyncConfig = field(default_factory=SyncConfig)
     square_api_version: str = "2025-06-16"
 
@@ -118,6 +134,29 @@ class Config:
         )
 
         config.square_api_version = os.getenv("SQUARE_API_VERSION", "2025-06-16")
+
+        # Load Stripe config
+        stripe_secret = os.getenv("STRIPE_SECRET_KEY")
+        if stripe_secret:
+            # Load tiered pricing IDs from env (STRIPE_PRICE_1_SESSION, etc.)
+            prices = {}
+            price_keys = [
+                ("1_SESSION", "STRIPE_PRICE_1_SESSION"),
+                ("5_SESSIONS", "STRIPE_PRICE_5_SESSIONS"),
+                ("10_SESSIONS", "STRIPE_PRICE_10_SESSIONS"),
+                ("MONTHLY", "STRIPE_PRICE_MONTHLY"),
+            ]
+            for key, env_var in price_keys:
+                price_id = os.getenv(env_var)
+                if price_id:
+                    prices[key] = price_id
+
+            config.stripe = StripeConfig(
+                secret_key=stripe_secret,
+                publishable_key=os.getenv("STRIPE_PUBLISHABLE_KEY"),
+                webhook_secret=os.getenv("STRIPE_WEBHOOK_SECRET"),
+                prices=prices,
+            )
 
         return config
 

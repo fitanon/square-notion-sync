@@ -18,7 +18,9 @@ from datetime import datetime
 
 from core.config import Config
 from core.scheduler import SyncScheduler
+from core.stripe_client import StripeClient
 from sync import FinancialSync, AppointmentsSync, SessionsSync
+from sync.stripe_payments import StripePaymentSync, StripeSubscriptionSync
 from api.portal import register_portal_routes
 
 # Configure logging
@@ -44,6 +46,16 @@ async def lifespan(app: FastAPI):
     app.state.financial_sync = FinancialSync(config)
     app.state.appointments_sync = AppointmentsSync(config)
     app.state.sessions_sync = SessionsSync(config)
+
+    # Stripe sync modules (if configured)
+    if config.stripe:
+        app.state.stripe_client = StripeClient(config.stripe)
+        app.state.stripe_payment_sync = StripePaymentSync(config)
+        app.state.stripe_subscription_sync = StripeSubscriptionSync(config)
+    else:
+        app.state.stripe_client = None
+        app.state.stripe_payment_sync = None
+        app.state.stripe_subscription_sync = None
 
     # Register daily sync jobs (call .sync directly - SyncResult already tracks timing)
     app.state.scheduler.add_daily_sync("financial", app.state.financial_sync.sync)
@@ -247,6 +259,104 @@ def register_routes(app: FastAPI):
         return request.app.state.sessions_sync.get_low_session_clients(
             account_codes=accounts, threshold=threshold,
         )
+
+    # ─────────────────────────────────────────────────────────────
+    # STRIPE ENDPOINTS
+    # ─────────────────────────────────────────────────────────────
+
+    @app.post("/sync/stripe/payments", response_model=SyncResponse)
+    def trigger_stripe_payment_sync(
+        request: Request,
+        days_back: int = Query(30, description="Days of payment history to sync"),
+    ):
+        """Sync Stripe payments to Notion."""
+        if not request.app.state.stripe_payment_sync:
+            raise HTTPException(status_code=503, detail="Stripe not configured")
+        result = request.app.state.stripe_payment_sync.sync(days_back=days_back)
+        return SyncResponse(**result.to_dict())
+
+    @app.post("/sync/stripe/subscriptions", response_model=SyncResponse)
+    def trigger_stripe_subscription_sync(request: Request):
+        """Sync Stripe subscriptions to Notion."""
+        if not request.app.state.stripe_subscription_sync:
+            raise HTTPException(status_code=503, detail="Stripe not configured")
+        result = request.app.state.stripe_subscription_sync.sync()
+        return SyncResponse(**result.to_dict())
+
+    @app.post("/stripe/checkout")
+    def create_checkout(
+        request: Request,
+        price_id: str = Query(..., description="Stripe Price ID"),
+        customer_email: Optional[str] = Query(None, description="Customer email"),
+        success_url: str = Query("https://example.com/success"),
+        cancel_url: str = Query("https://example.com/cancel"),
+    ):
+        """Create a Stripe Checkout session."""
+        if not request.app.state.stripe_client:
+            raise HTTPException(status_code=503, detail="Stripe not configured")
+
+        try:
+            url = request.app.state.stripe_client.create_checkout_session(
+                price_id=price_id,
+                customer_email=customer_email,
+                success_url=success_url,
+                cancel_url=cancel_url,
+            )
+            return {"checkout_url": url}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.get("/stripe/prices")
+    def list_stripe_prices(request: Request):
+        """List configured Stripe price tiers."""
+        config = request.app.state.config
+        if not config.stripe:
+            raise HTTPException(status_code=503, detail="Stripe not configured")
+
+        prices = []
+        for key, price_id in config.stripe.prices.items():
+            price = request.app.state.stripe_client.get_price(price_id)
+            if price:
+                prices.append({
+                    "key": key,
+                    "id": price.id,
+                    "name": price.name,
+                    "sessions": price.sessions,
+                    "amount": price.amount_dollars,
+                    "per_session": price.per_session_dollars,
+                    "is_recurring": price.is_recurring,
+                    "interval": price.interval,
+                })
+        return {"prices": prices}
+
+    @app.post("/stripe/webhook")
+    async def handle_stripe_webhook(request: Request):
+        """Handle Stripe webhook events."""
+        if not request.app.state.stripe_client:
+            raise HTTPException(status_code=503, detail="Stripe not configured")
+
+        payload = await request.body()
+        signature = request.headers.get("stripe-signature", "")
+
+        try:
+            event = request.app.state.stripe_client.construct_webhook_event(
+                payload, signature
+            )
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid payload")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+        result = request.app.state.stripe_client.handle_webhook_event(event)
+        logger.info(f"Processed webhook: {event.type}")
+
+        # Auto-sync on successful payments
+        if event.type == "payment_intent.succeeded":
+            request.app.state.stripe_payment_sync.sync(days_back=1)
+        elif event.type in ("customer.subscription.created", "customer.subscription.updated"):
+            request.app.state.stripe_subscription_sync.sync()
+
+        return {"received": True, "event_type": event.type}
 
 
 # Create app instance
