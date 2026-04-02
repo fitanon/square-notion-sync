@@ -8,6 +8,7 @@ from .config import Config, AccountConfig
 from .accounts import SquareClient, MultiAccountClient
 from .notion import NotionClient
 from .scheduler import SyncScheduler
+from .stripe_client import StripeClient
 
 __all__ = [
     'Config',
@@ -16,4 +17,5 @@ __all__ = [
     'MultiAccountClient',
     'NotionClient',
     'SyncScheduler',
+    'StripeClient',
 ]

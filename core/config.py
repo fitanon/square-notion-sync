@@ -56,6 +56,9 @@ class Config:
     notion: Optional[NotionConfig] = None
     sync: SyncConfig = field(default_factory=SyncConfig)
     square_api_version: str = "2025-06-16"
+    stripe_secret_key: Optional[str] = None
+    stripe_webhook_secret: Optional[str] = None
+    stripe_prices: Optional[Dict[str, str]] = None
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -118,6 +121,16 @@ class Config:
         )
 
         config.square_api_version = os.getenv("SQUARE_API_VERSION", "2025-06-16")
+
+        # Load Stripe config
+        config.stripe_secret_key = os.getenv("STRIPE_SECRET_KEY")
+        config.stripe_webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
+        config.stripe_prices = {
+            "single": os.getenv("STRIPE_PRICE_1_SESSION"),
+            "5pack": os.getenv("STRIPE_PRICE_5_SESSIONS"),
+            "10pack": os.getenv("STRIPE_PRICE_10_SESSIONS"),
+            "monthly": os.getenv("STRIPE_PRICE_MONTHLY"),
+        }
 
         return config
 

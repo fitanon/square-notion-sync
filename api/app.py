@@ -16,9 +16,14 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 
+from fastapi.responses import HTMLResponse, JSONResponse
+from starlette.requests import Request
+
 from core.config import Config
 from core.scheduler import SyncScheduler, SyncRunner
+from core.stripe_client import StripeClient
 from sync import FinancialSync, AppointmentsSync, SessionsSync
+from sync.stripe_payments import StripePaymentsSync
 
 # Configure logging
 logging.basicConfig(
@@ -33,6 +38,8 @@ scheduler: SyncScheduler = None
 financial_sync: FinancialSync = None
 appointments_sync: AppointmentsSync = None
 sessions_sync: SessionsSync = None
+stripe_client: StripeClient = None
+stripe_sync: StripePaymentsSync = None
 
 
 def setup_sync_jobs():
@@ -59,7 +66,7 @@ def setup_sync_jobs():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager."""
-    global config, scheduler, financial_sync, appointments_sync, sessions_sync
+    global config, scheduler, financial_sync, appointments_sync, sessions_sync, stripe_client, stripe_sync
 
     # Startup
     logger.info("Starting Square-Notion Sync API...")
@@ -73,6 +80,13 @@ async def lifespan(app: FastAPI):
     financial_sync = FinancialSync(config)
     appointments_sync = AppointmentsSync(config)
     sessions_sync = SessionsSync(config)
+    stripe_client = StripeClient(config)
+    stripe_sync = StripePaymentsSync(config)
+
+    if stripe_client.is_configured:
+        logger.info("Stripe integration active")
+    else:
+        logger.info("Stripe not configured (set STRIPE_SECRET_KEY to enable)")
 
     setup_sync_jobs()
     scheduler.start()
@@ -332,6 +346,140 @@ def register_routes(app: FastAPI):
             account_codes=accounts,
             threshold=threshold,
         )
+
+    # ─────────────────────────────────────────────────────────────
+    # STRIPE ENDPOINTS
+    # ─────────────────────────────────────────────────────────────
+
+    @app.get("/stripe/prices")
+    def get_stripe_prices():
+        """List available pricing tiers."""
+        if not stripe_client:
+            raise HTTPException(status_code=500, detail="Stripe not initialized")
+        return {"prices": stripe_client.get_prices()}
+
+    @app.post("/stripe/checkout")
+    def create_checkout(
+        tier: str = Query(..., description="Pricing tier: single, 5pack, 10pack, monthly"),
+        email: Optional[str] = Query(None, description="Customer email"),
+        success_url: Optional[str] = Query(None),
+        cancel_url: Optional[str] = Query(None),
+    ):
+        """Create a Stripe Checkout session and return the payment URL."""
+        if not stripe_client or not stripe_client.is_configured:
+            raise HTTPException(status_code=500, detail="Stripe not configured")
+
+        try:
+            result = stripe_client.create_checkout_session(
+                tier=tier,
+                customer_email=email,
+                success_url=success_url,
+                cancel_url=cancel_url,
+            )
+            return result
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/stripe/webhook")
+    async def stripe_webhook(request: Request):
+        """Handle Stripe webhook events."""
+        if not stripe_client:
+            raise HTTPException(status_code=500, detail="Stripe not initialized")
+
+        payload = await request.body()
+        sig_header = request.headers.get("stripe-signature")
+
+        if not sig_header:
+            raise HTTPException(status_code=400, detail="Missing stripe-signature header")
+
+        try:
+            payment = stripe_client.handle_webhook(payload, sig_header)
+            if payment and stripe_sync:
+                stripe_sync._sync_payment(payment)
+                return {"status": "synced", "payment_id": payment.id}
+            return {"status": "ignored"}
+        except Exception as e:
+            logger.error(f"Webhook error: {e}")
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/sync/stripe/payments")
+    def trigger_stripe_sync(
+        limit: int = Query(100, description="Number of recent payments to sync"),
+    ):
+        """Manually trigger Stripe → Notion payment sync."""
+        if not stripe_sync:
+            raise HTTPException(status_code=500, detail="Stripe sync not initialized")
+
+        result = stripe_sync.sync(limit=limit)
+        return SyncResponse(**result.to_dict())
+
+    # ─────────────────────────────────────────────────────────────
+    # CLIENT PORTAL
+    # ─────────────────────────────────────────────────────────────
+
+    @app.get("/portal/lookup")
+    def portal_lookup(
+        email: Optional[str] = Query(None),
+        phone: Optional[str] = Query(None),
+    ):
+        """Look up a client's session balance by email or phone."""
+        if not email and not phone:
+            raise HTTPException(status_code=400, detail="Provide email or phone")
+
+        if not config or not config.accounts:
+            raise HTTPException(status_code=500, detail="No accounts configured")
+
+        from core.accounts import MultiAccountClient
+        multi = MultiAccountClient(config)
+
+        # Search across all accounts
+        for code, client in multi.clients.items():
+            for customer in client.get_all_customers():
+                match = False
+                if email and customer.email and customer.email.lower() == email.lower():
+                    match = True
+                if phone and customer.phone:
+                    # Normalize phone for comparison
+                    clean_input = ''.join(c for c in (phone or '') if c.isdigit())
+                    clean_stored = ''.join(c for c in customer.phone if c.isdigit())
+                    if clean_input and clean_stored and clean_input[-10:] == clean_stored[-10:]:
+                        match = True
+
+                if match:
+                    # Count sessions
+                    purchased = client.count_session_purchases(
+                        customer.id,
+                        config.sync.session_item_name,
+                    )
+
+                    # Count completed bookings as sessions used
+                    used = 0
+                    for booking in client.get_all_bookings():
+                        if booking.customer_id == customer.id and booking.is_completed:
+                            used += 1
+
+                    return {
+                        "name": customer.full_name,
+                        "email": customer.email,
+                        "phone": customer.phone,
+                        "account": code,
+                        "sessions_purchased": purchased,
+                        "sessions_used": used,
+                        "sessions_remaining": max(0, purchased - used),
+                    }
+
+        raise HTTPException(status_code=404, detail="Client not found. Check your phone number or email.")
+
+    @app.get("/", response_class=HTMLResponse)
+    def portal():
+        """Serve the client portal."""
+        import os
+        portal_path = os.path.join(os.path.dirname(__file__), "..", "portal", "index.html")
+        try:
+            with open(portal_path) as f:
+                return HTMLResponse(content=f.read())
+        except FileNotFoundError:
+            return HTMLResponse(content="<h1>Portal not found</h1>", status_code=404)
 
 
 # Create app instance

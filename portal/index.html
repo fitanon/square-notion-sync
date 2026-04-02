@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Fit Clinic</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --black: #0a0a0a;
+    --white: #fafafa;
+    --gray-100: #f0f0f0;
+    --gray-200: #e0e0e0;
+    --gray-400: #999;
+    --gray-600: #666;
+    --radius: 8px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--white);
+    color: var(--black);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── Layout ─── */
+  .container {
+    width: 100%;
+    max-width: 480px;
+    padding: 0 24px;
+  }
+
+  header {
+    width: 100%;
+    border-bottom: 1px solid var(--gray-200);
+    padding: 32px 0 24px;
+    text-align: center;
+  }
+
+  header h1 {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  header p {
+    font-size: 13px;
+    color: var(--gray-600);
+    margin-top: 4px;
+  }
+
+  main {
+    padding: 48px 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* ─── Lookup Form ─── */
+  #lookup-view {
+    text-align: center;
+  }
+
+  #lookup-view h2 {
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  #lookup-view p {
+    font-size: 14px;
+    color: var(--gray-600);
+    margin-bottom: 32px;
+  }
+
+  .input-group {
+    margin-bottom: 16px;
+  }
+
+  input {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 16px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    background: var(--white);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input:focus {
+    border-color: var(--black);
+  }
+
+  input::placeholder {
+    color: var(--gray-400);
+  }
+
+  button {
+    width: 100%;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 500;
+    background: var(--black);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  button:hover { opacity: 0.85; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .error {
+    margin-top: 16px;
+    padding: 12px;
+    font-size: 14px;
+    color: #b00;
+    background: #fef0f0;
+    border-radius: var(--radius);
+    display: none;
+  }
+
+  /* ─── Results ─── */
+  #result-view {
+    display: none;
+    text-align: center;
+  }
+
+  .client-name {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 48px;
+    color: var(--gray-600);
+  }
+
+  .balance-number {
+    font-size: 96px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .balance-label {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gray-400);
+    margin-top: 8px;
+  }
+
+  .balance-detail {
+    margin-top: 48px;
+    display: flex;
+    gap: 48px;
+    justify-content: center;
+  }
+
+  .detail-item {
+    text-align: center;
+  }
+
+  .detail-number {
+    font-size: 32px;
+    font-weight: 600;
+  }
+
+  .detail-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--gray-400);
+    margin-top: 4px;
+  }
+
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: var(--gray-200);
+    margin: 48px 0;
+  }
+
+  /* ─── Pricing ─── */
+  .pricing {
+    width: 100%;
+  }
+
+  .pricing h3 {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    text-align: center;
+    color: var(--gray-600);
+  }
+
+  .price-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--gray-100);
+  }
+
+  .price-card:last-child { border-bottom: none; }
+
+  .price-info h4 {
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .price-info span {
+    font-size: 13px;
+    color: var(--gray-400);
+  }
+
+  .price-right {
+    display: flex;
+    align-items: center;
+  }
+
+  .price-amount {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .price-buy {
+    padding: 8px 20px;
+    font-size: 13px;
+    width: auto;
+    margin-left: 16px;
+    white-space: nowrap;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-top: 48px;
+    font-size: 14px;
+    color: var(--gray-400);
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .back-link:hover { color: var(--black); }
+
+  /* ─── Footer ─── */
+  footer {
+    margin-top: auto;
+    padding: 24px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--gray-400);
+    border-top: 1px solid var(--gray-200);
+    width: 100%;
+  }
+
+  /* ─── Loading ─── */
+  .spinner {
+    display: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--gray-200);
+    border-top-color: var(--black);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin: 16px auto;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── Success/Cancel banners ─── */
+  .banner {
+    width: 100%;
+    padding: 12px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .banner-success { background: #f0faf0; color: #1a7a1a; }
+  .banner-cancel { background: #fef0f0; color: #b00; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <h1>The Fit Clinic</h1>
+    <p>Client Portal</p>
+  </div>
+</header>
+
+<div id="banner"></div>
+
+<main>
+  <div class="container">
+
+    <!-- Lookup -->
+    <div id="lookup-view">
+      <h2>Check your balance</h2>
+      <p>Enter your phone number or email to view your sessions.</p>
+      <form id="lookup-form">
+        <div class="input-group">
+          <input type="text" id="lookup-input" placeholder="Phone or email" autocomplete="off" required>
+        </div>
+        <button type="submit" id="lookup-btn">Look up</button>
+      </form>
+      <div class="spinner" id="spinner"></div>
+      <div class="error" id="error-msg"></div>
+    </div>
+
+    <!-- Results -->
+    <div id="result-view">
+      <div class="client-name" id="client-name"></div>
+
+      <div class="balance-number" id="sessions-remaining">0</div>
+      <div class="balance-label">sessions remaining</div>
+
+      <div class="balance-detail">
+        <div class="detail-item">
+          <div class="detail-number" id="sessions-purchased">0</div>
+          <div class="detail-label">purchased</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-number" id="sessions-used">0</div>
+          <div class="detail-label">used</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Pricing -->
+      <div class="pricing" id="pricing-section">
+        <h3>Purchase Sessions</h3>
+        <div id="price-list"></div>
+      </div>
+
+      <a class="back-link" onclick="showLookup()">&#8592; Different account</a>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    The Fit Clinic &middot; San Jose, CA
+  </div>
+</footer>
+
+<script>
+const API = window.location.origin;
+
+// Check for success/cancel from Stripe redirect
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('success') === 'true') {
+  showBanner('Payment successful. Your sessions have been added.', 'success');
+} else if (urlParams.get('cancelled') === 'true') {
+  showBanner('Payment cancelled.', 'cancel');
+}
+
+function showBanner(msg, type) {
+  const el = document.getElementById('banner');
+  el.className = 'banner banner-' + type;
+  el.textContent = msg;
+}
+
+// Lookup form
+document.getElementById('lookup-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  var input = document.getElementById('lookup-input').value.trim();
+  if (!input) return;
+
+  var btn = document.getElementById('lookup-btn');
+  var spinner = document.getElementById('spinner');
+  var error = document.getElementById('error-msg');
+
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  error.style.display = 'none';
+
+  try {
+    var isEmail = input.indexOf('@') !== -1;
+    var param = isEmail ? 'email' : 'phone';
+    var resp = await fetch(API + '/portal/lookup?' + param + '=' + encodeURIComponent(input));
+
+    if (!resp.ok) {
+      var errData = await resp.json();
+      throw new Error(errData.detail || 'Client not found');
+    }
+
+    var data = await resp.json();
+    showResults(data);
+
+  } catch (err) {
+    error.textContent = err.message;
+    error.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+});
+
+function showResults(data) {
+  document.getElementById('lookup-view').style.display = 'none';
+  document.getElementById('result-view').style.display = 'block';
+
+  document.getElementById('client-name').textContent = data.name || '';
+  document.getElementById('sessions-remaining').textContent = data.sessions_remaining || 0;
+  document.getElementById('sessions-purchased').textContent = data.sessions_purchased || 0;
+  document.getElementById('sessions-used').textContent = data.sessions_used || 0;
+
+  loadPrices(data.email);
+}
+
+async function loadPrices(email) {
+  try {
+    var resp = await fetch(API + '/stripe/prices');
+    var data = await resp.json();
+    var list = document.getElementById('price-list');
+
+    // Clear existing children
+    while (list.firstChild) {
+      list.removeChild(list.firstChild);
+    }
+
+    data.prices.forEach(function(p) {
+      var card = document.createElement('div');
+      card.className = 'price-card';
+
+      var info = document.createElement('div');
+      info.className = 'price-info';
+
+      var title = document.createElement('h4');
+      title.textContent = p.label;
+      info.appendChild(title);
+
+      var detail = document.createElement('span');
+      var detailText = p.sessions ? p.sessions + ' sessions' : 'Unlimited';
+      if (p.per_session_display) detailText += ' \u00B7 ' + p.per_session_display + '/session';
+      detail.textContent = detailText;
+      info.appendChild(detail);
+
+      card.appendChild(info);
+
+      var right = document.createElement('div');
+      right.className = 'price-right';
+
+      var amount = document.createElement('span');
+      amount.className = 'price-amount';
+      amount.textContent = p.amount_display + (p.recurring ? '/mo' : '');
+      right.appendChild(amount);
+
+      var buyBtn = document.createElement('button');
+      buyBtn.className = 'price-buy';
+      buyBtn.textContent = 'Buy';
+      buyBtn.setAttribute('data-tier', p.tier);
+      buyBtn.setAttribute('data-email', email || '');
+      buyBtn.addEventListener('click', function() {
+        buyTier(this.getAttribute('data-tier'), this.getAttribute('data-email'));
+      });
+      right.appendChild(buyBtn);
+
+      card.appendChild(right);
+      list.appendChild(card);
+    });
+  } catch (err) {
+    console.error('Failed to load prices:', err);
+  }
+}
+
+async function buyTier(tier, email) {
+  try {
+    var params = 'tier=' + encodeURIComponent(tier);
+    if (email) params += '&email=' + encodeURIComponent(email);
+
+    var resp = await fetch(API + '/stripe/checkout?' + params, { method: 'POST' });
+    var data = await resp.json();
+
+    if (data.checkout_url) {
+      window.location.href = data.checkout_url;
+    } else {
+      alert('Unable to create checkout session');
+    }
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+function showLookup() {
+  document.getElementById('result-view').style.display = 'none';
+  document.getElementById('lookup-view').style.display = 'block';
+  document.getElementById('lookup-input').value = '';
+}
+</script>
+</body>
+</html>
