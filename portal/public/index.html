@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>The Fit Clinic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --ink: #1a1a18;
+    --parchment: #f5f2ed;
+    --warm-white: #faf8f5;
+    --stone: #c4beb5;
+    --sage: #8a9a7b;
+    --sage-light: #e8ede4;
+    --sage-dark: #6b7d5e;
+    --charcoal: #3d3d3b;
+    --whisper: #e8e4de;
+    --gold: #b8a472;
+    --gold-light: #f0ead8;
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-body: 'DM Sans', -apple-system, sans-serif;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--parchment);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  header {
+    padding: 60px 0 40px;
+    text-align: center;
+  }
+
+  header::after {
+    content: '';
+    display: block;
+    width: 48px;
+    height: 1px;
+    background: var(--stone);
+    margin: 28px auto 0;
+  }
+
+  .logo-mark {
+    font-family: var(--font-display);
+    font-size: 38px;
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+  }
+
+  .logo-sub {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--stone);
+    margin-top: 6px;
+  }
+
+  main {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 48px 0 80px;
+  }
+
+  .container {
+    max-width: 440px;
+    margin: 0 auto;
+    padding: 0 24px;
+    width: 100%;
+  }
+
+  .nav-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .nav-card {
+    display: block;
+    background: var(--warm-white);
+    border: 1px solid var(--whisper);
+    border-radius: 12px;
+    padding: 32px 28px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .nav-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .nav-card:hover {
+    border-color: var(--sage);
+    box-shadow: 0 4px 32px rgba(26,26,24,0.08);
+    transform: translateY(-2px);
+  }
+
+  .nav-card:hover::before { opacity: 1; }
+  .nav-card:active { transform: translateY(0); }
+
+  .nav-card--checkin::before {
+    background: linear-gradient(90deg, var(--sage), var(--gold));
+  }
+
+  .nav-card--sessions::before {
+    background: linear-gradient(90deg, var(--gold), var(--sage));
+  }
+
+  .nav-card-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .nav-card-title {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 400;
+    margin-bottom: 8px;
+  }
+
+  .nav-card-desc {
+    font-size: 13px;
+    color: var(--stone);
+    line-height: 1.5;
+    padding-right: 32px;
+  }
+
+  .nav-card-arrow {
+    position: absolute;
+    right: 28px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: var(--stone);
+    transition: color 0.2s, transform 0.2s;
+  }
+
+  .nav-card:hover .nav-card-arrow {
+    color: var(--sage);
+    transform: translateY(-50%) translateX(4px);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-in { animation: fadeUp 0.5s ease-out forwards; }
+  .delay-1 { animation-delay: 0.1s; opacity: 0; }
+  .delay-2 { animation-delay: 0.2s; opacity: 0; }
+
+  footer {
+    padding: 32px 24px 40px;
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--stone);
+  }
+
+  footer .footer-line { margin-bottom: 4px; }
+
+  @media (max-width: 480px) {
+    header { padding: 48px 0 32px; }
+    .logo-mark { font-size: 32px; }
+    .nav-card { padding: 28px 24px; }
+    .nav-card-arrow { right: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">The Fit Clinic</div>
+  <div class="logo-sub">San Jose, California</div>
+</header>
+
+<main>
+  <div class="container">
+    <div class="nav-cards">
+
+      <a href="/checkin.html" class="nav-card nav-card--checkin animate-in delay-1">
+        <span class="nav-card-icon">&#9745;</span>
+        <div class="nav-card-title">Check In</div>
+        <div class="nav-card-desc">Scan the QR code or tap here to check in for your session.</div>
+        <span class="nav-card-arrow">&rarr;</span>
+      </a>
+
+      <a href="/client" class="nav-card nav-card--sessions animate-in delay-2">
+        <span class="nav-card-icon">&#9881;</span>
+        <div class="nav-card-title">View My Sessions</div>
+        <div class="nav-card-desc">Check your session balance, purchase sessions, and manage your account.</div>
+        <span class="nav-card-arrow">&rarr;</span>
+      </a>
+
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-line">The Fit Clinic &middot; San Jose, CA</div>
+  <div>Personal training &amp; wellness</div>
+</footer>
+
+</body>
+</html>

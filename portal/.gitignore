@@ -1,0 +1,5 @@
+node_modules/
+credentials.json
+credentials.json.bak
+.vercel
+.DS_Store

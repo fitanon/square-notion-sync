@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Fit Clinic — Client Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --ink: #1a1a18;
+    --parchment: #f5f2ed;
+    --warm-white: #faf8f5;
+    --stone: #c4beb5;
+    --sage: #8a9a7b;
+    --sage-light: #e8ede4;
+    --sage-dark: #6b7d5e;
+    --charcoal: #3d3d3b;
+    --whisper: #e8e4de;
+    --gold: #b8a472;
+    --gold-light: #f0ead8;
+    --error: #c4484a;
+    --error-bg: #fdf0f0;
+    --success: #5a7d52;
+    --success-bg: #eef4ec;
+    --radius: 6px;
+    --radius-lg: 12px;
+    --shadow-soft: 0 2px 20px rgba(26,26,24,0.06);
+    --shadow-card: 0 4px 32px rgba(26,26,24,0.08);
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-body: 'DM Sans', -apple-system, sans-serif;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--parchment);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ─── Texture overlay ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* ─── Header ─── */
+  header {
+    padding: 40px 0 32px;
+    text-align: center;
+    position: relative;
+  }
+
+  header::after {
+    content: '';
+    display: block;
+    width: 48px;
+    height: 1px;
+    background: var(--stone);
+    margin: 24px auto 0;
+  }
+
+  .logo-mark {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+  }
+
+  .logo-sub {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--stone);
+    margin-top: 4px;
+  }
+
+  /* ─── Layout ─── */
+  .container {
+    max-width: 440px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  main {
+    padding: 40px 0 80px;
+  }
+
+  /* ─── Banner ─── */
+  .banner {
+    text-align: center;
+    padding: 14px 24px;
+    font-size: 13px;
+    font-weight: 500;
+    display: none;
+  }
+
+  .banner-success {
+    display: block;
+    background: var(--success-bg);
+    color: var(--success);
+  }
+
+  .banner-cancel {
+    display: block;
+    background: var(--error-bg);
+    color: var(--error);
+  }
+
+  /* ─── Lookup View ─── */
+  #lookup-view {
+    text-align: center;
+  }
+
+  .view-title {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 400;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+
+  .view-subtitle {
+    font-size: 14px;
+    color: var(--stone);
+    margin-bottom: 40px;
+    line-height: 1.5;
+  }
+
+  /* ─── Form Elements ─── */
+  .field {
+    margin-bottom: 16px;
+    text-align: left;
+  }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--charcoal);
+    margin-bottom: 8px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"] {
+    width: 100%;
+    padding: 16px 18px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    color: var(--ink);
+    background: var(--warm-white);
+    border: 1px solid var(--whisper);
+    border-radius: var(--radius);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  input:focus {
+    border-color: var(--sage);
+    box-shadow: 0 0 0 3px var(--sage-light);
+  }
+
+  input::placeholder {
+    color: var(--stone);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 16px 24px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--warm-white);
+    background: var(--ink);
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .btn:hover { background: var(--charcoal); }
+  .btn:active { transform: scale(0.99); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--whisper);
+  }
+
+  .btn-outline:hover {
+    background: var(--warm-white);
+    border-color: var(--stone);
+  }
+
+  .btn-sage {
+    background: var(--sage);
+  }
+
+  .btn-sage:hover { background: var(--sage-dark); }
+
+  .error-msg {
+    margin-top: 16px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--error);
+    background: var(--error-bg);
+    border-radius: var(--radius);
+    display: none;
+  }
+
+  .spinner {
+    display: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--whisper);
+    border-top-color: var(--sage);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin: 20px auto;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── Balance Card ─── */
+  #result-view {
+    display: none;
+  }
+
+  .balance-card {
+    background: var(--warm-white);
+    border-radius: var(--radius-lg);
+    padding: 48px 32px;
+    text-align: center;
+    box-shadow: var(--shadow-card);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .balance-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--sage), var(--gold));
+  }
+
+  .client-greeting {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--charcoal);
+    margin-bottom: 40px;
+  }
+
+  .balance-figure {
+    font-family: var(--font-display);
+    font-size: 108px;
+    font-weight: 300;
+    line-height: 1;
+    color: var(--ink);
+    letter-spacing: -0.04em;
+  }
+
+  .balance-unit {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--stone);
+    margin-top: 12px;
+  }
+
+  .balance-stats {
+    display: flex;
+    justify-content: center;
+    gap: 56px;
+    margin-top: 44px;
+    padding-top: 32px;
+    border-top: 1px solid var(--whisper);
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 400;
+    color: var(--ink);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--stone);
+    margin-top: 4px;
+  }
+
+  /* ─── Pricing Section ─── */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 48px 0 32px;
+  }
+
+  .section-divider::before,
+  .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--whisper);
+  }
+
+  .section-divider span {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--stone);
+    white-space: nowrap;
+  }
+
+  .tier-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px;
+    background: var(--warm-white);
+    border: 1px solid var(--whisper);
+    border-radius: var(--radius-lg);
+    margin-bottom: 12px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+
+  .tier-card:hover {
+    border-color: var(--sage);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .tier-card.selected {
+    border-color: var(--sage);
+    background: var(--sage-light);
+    box-shadow: 0 0 0 2px var(--sage);
+  }
+
+  .tier-info h4 {
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 3px;
+  }
+
+  .tier-info span {
+    font-size: 12px;
+    color: var(--stone);
+  }
+
+  .tier-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: var(--gold-light);
+    color: var(--gold);
+    margin-left: 8px;
+  }
+
+  .tier-price {
+    text-align: right;
+  }
+
+  .tier-price .amount {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 400;
+    color: var(--ink);
+  }
+
+  .tier-price .per {
+    font-size: 11px;
+    color: var(--stone);
+  }
+
+  /* ─── Stripe Payment Element placeholder ─── */
+  .payment-section {
+    display: none;
+    margin-top: 32px;
+  }
+
+  .payment-form {
+    background: var(--warm-white);
+    border: 1px solid var(--whisper);
+    border-radius: var(--radius-lg);
+    padding: 28px 24px;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .payment-form-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--stone);
+    margin-bottom: 20px;
+  }
+
+  /* Stripe Element placeholder */
+  .stripe-element-placeholder {
+    background: white;
+    border: 1px solid var(--whisper);
+    border-radius: var(--radius);
+    padding: 16px;
+    min-height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--stone);
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+
+  .payment-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    margin-bottom: 20px;
+    border-top: 1px solid var(--whisper);
+    border-bottom: 1px solid var(--whisper);
+  }
+
+  .payment-summary .label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--charcoal);
+  }
+
+  .payment-summary .total {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  /* ─── Back link ─── */
+  .back-link {
+    display: inline-block;
+    margin-top: 40px;
+    font-size: 13px;
+    color: var(--stone);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s;
+    text-align: center;
+    width: 100%;
+  }
+
+  .back-link:hover { color: var(--ink); }
+
+  /* ─── Footer ─── */
+  footer {
+    padding: 32px 24px 40px;
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--stone);
+  }
+
+  footer .footer-line {
+    margin-bottom: 4px;
+  }
+
+  /* ─── Animations ─── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-in {
+    animation: fadeUp 0.5s ease-out forwards;
+  }
+
+  .delay-1 { animation-delay: 0.1s; opacity: 0; }
+  .delay-2 { animation-delay: 0.2s; opacity: 0; }
+  .delay-3 { animation-delay: 0.3s; opacity: 0; }
+  .delay-4 { animation-delay: 0.4s; opacity: 0; }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 480px) {
+    .balance-figure { font-size: 80px; }
+    .balance-stats { gap: 32px; }
+    .stat-value { font-size: 28px; }
+    .balance-card { padding: 40px 24px; }
+    .tier-card { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">The Fit Clinic</div>
+  <div class="logo-sub">San Jose, California</div>
+</header>
+
+<div id="banner" class="banner"></div>
+
+<main>
+  <div class="container">
+
+    <!-- ═══════ LOOKUP VIEW ═══════ -->
+    <div id="lookup-view" class="animate-in">
+      <div class="view-title">Welcome back</div>
+      <p class="view-subtitle">Enter your phone number or email to view your session balance.</p>
+
+      <form id="lookup-form">
+        <div class="field">
+          <label for="lookup-input">Phone or Email</label>
+          <input type="text" id="lookup-input" placeholder="(408) 555-1234 or you@email.com" autocomplete="off" required>
+        </div>
+        <button type="submit" class="btn" id="lookup-btn">View My Sessions</button>
+      </form>
+      <div class="spinner" id="spinner"></div>
+      <div class="error-msg" id="error-msg"></div>
+    </div>
+
+    <!-- ═══════ RESULT VIEW ═══════ -->
+    <div id="result-view">
+
+      <!-- Balance Card -->
+      <div class="balance-card animate-in">
+        <div class="client-greeting" id="client-name">Welcome, Client</div>
+        <div class="balance-figure" id="sessions-remaining">0</div>
+        <div class="balance-unit">sessions remaining</div>
+        <div class="balance-stats">
+          <div class="stat">
+            <div class="stat-value" id="sessions-purchased">0</div>
+            <div class="stat-label">Purchased</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="sessions-used">0</div>
+            <div class="stat-label">Completed</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing Tiers -->
+      <div class="section-divider animate-in delay-1">
+        <span>Purchase Sessions</span>
+      </div>
+
+      <div id="tier-list">
+        <div class="tier-card animate-in delay-1" onclick="selectTier(this, 'single')" data-tier="single">
+          <div class="tier-info">
+            <h4>Single Session</h4>
+            <span>1 session &middot; $85 each</span>
+          </div>
+          <div class="tier-price">
+            <div class="amount">$85</div>
+          </div>
+        </div>
+
+        <div class="tier-card animate-in delay-2" onclick="selectTier(this, '5pack')" data-tier="5pack">
+          <div class="tier-info">
+            <h4>5-Session Pack <span class="tier-badge">Save $25</span></h4>
+            <span>5 sessions &middot; $80 each</span>
+          </div>
+          <div class="tier-price">
+            <div class="amount">$400</div>
+          </div>
+        </div>
+
+        <div class="tier-card animate-in delay-3" onclick="selectTier(this, '10pack')" data-tier="10pack">
+          <div class="tier-info">
+            <h4>10-Session Pack <span class="tier-badge">Best Value</span></h4>
+            <span>10 sessions &middot; $75 each</span>
+          </div>
+          <div class="tier-price">
+            <div class="amount">$750</div>
+          </div>
+        </div>
+
+        <div class="tier-card animate-in delay-4" onclick="selectTier(this, 'monthly')" data-tier="monthly">
+          <div class="tier-info">
+            <h4>Monthly Unlimited</h4>
+            <span>Unlimited sessions &middot; recurring</span>
+          </div>
+          <div class="tier-price">
+            <div class="amount">$299</div>
+            <div class="per">/month</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Form (appears after selecting tier) -->
+      <div class="payment-section" id="payment-section">
+        <div class="payment-form">
+          <div class="payment-form-title">Payment Details</div>
+
+          <!-- This is where Stripe Payment Element mounts -->
+          <div class="stripe-element-placeholder" id="payment-element">
+            Stripe Payment Element loads here
+          </div>
+
+          <div class="payment-summary">
+            <span class="label">Total</span>
+            <span class="total" id="payment-total">$85</span>
+          </div>
+
+          <button class="btn btn-sage" id="pay-btn" type="button">
+            Complete Purchase
+          </button>
+        </div>
+      </div>
+
+      <a class="back-link" onclick="showLookup()">&#8592; Different account</a>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="footer-line">The Fit Clinic &middot; San Jose, CA</div>
+  <div>Payments secured by Stripe</div>
+</footer>
+
+<script>
+// ═══════ DEMO INTERACTIONS ═══════
+// In production, these call your API. Here they simulate the flow.
+
+var selectedTier = null;
+var prices = {
+  single:  { label: 'Single Session',   amount: '$85',  total: '$85' },
+  '5pack': { label: '5-Session Pack',    amount: '$400', total: '$400' },
+  '10pack':{ label: '10-Session Pack',   amount: '$750', total: '$750' },
+  monthly: { label: 'Monthly Unlimited', amount: '$299', total: '$299/mo' }
+};
+
+// Lookup form
+document.getElementById('lookup-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  var input = document.getElementById('lookup-input').value.trim();
+  if (!input) return;
+
+  var btn = document.getElementById('lookup-btn');
+  var spinner = document.getElementById('spinner');
+  var error = document.getElementById('error-msg');
+
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  error.style.display = 'none';
+
+  // Simulate API lookup
+  setTimeout(function() {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    showResults({
+      name: 'Alex Rivera',
+      sessions_remaining: 4,
+      sessions_purchased: 10,
+      sessions_used: 6,
+      email: 'alex@example.com'
+    });
+  }, 800);
+});
+
+function showResults(data) {
+  document.getElementById('lookup-view').style.display = 'none';
+  var rv = document.getElementById('result-view');
+  rv.style.display = 'block';
+
+  document.getElementById('client-name').textContent = 'Welcome, ' + (data.name || 'Client');
+  document.getElementById('sessions-remaining').textContent = data.sessions_remaining || 0;
+  document.getElementById('sessions-purchased').textContent = data.sessions_purchased || 0;
+  document.getElementById('sessions-used').textContent = data.sessions_used || 0;
+}
+
+function selectTier(el, tier) {
+  // Remove selected from all
+  var cards = document.querySelectorAll('.tier-card');
+  for (var i = 0; i < cards.length; i++) {
+    cards[i].classList.remove('selected');
+  }
+  el.classList.add('selected');
+  selectedTier = tier;
+
+  // Show payment section
+  var ps = document.getElementById('payment-section');
+  ps.style.display = 'block';
+  document.getElementById('payment-total').textContent = prices[tier].total;
+
+  // Smooth scroll to payment
+  ps.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function showLookup() {
+  document.getElementById('result-view').style.display = 'none';
+  document.getElementById('lookup-view').style.display = 'block';
+  document.getElementById('lookup-input').value = '';
+  selectedTier = null;
+  document.getElementById('payment-section').style.display = 'none';
+}
+
+// Pay button demo
+document.getElementById('pay-btn').addEventListener('click', function() {
+  alert('In production, this confirms payment via Stripe Payment Element.\nTier: ' + (selectedTier || 'none'));
+});
+</script>
+</body>
+</html>

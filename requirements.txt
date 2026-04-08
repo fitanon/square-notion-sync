@@ -1,0 +1,37 @@
+# Square-Notion Sync Core Library
+# ================================
+
+# Web framework
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+
+# HTTP client
+requests>=2.31.0
+httpx>=0.24.0
+
+# Configuration
+python-dotenv>=1.0.0
+
+# Scheduling
+APScheduler>=3.10.0
+pytz>=2023.3
+
+# Data validation
+pydantic>=2.0.0
+
+# Security (for token encryption)
+cryptography>=41.0.0
+
+# Stripe payments
+stripe>=8.0.0
+
+# Database (Neon Postgres)
+psycopg2-binary>=2.9.0
+
+# Development
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+
+# Optional: AI enrichment
+# perplexityai>=0.1
+# comet-ml>=3.4

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Check In — The Fit Clinic</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1a1a18;
+      --parchment: #f5f2ed;
+      --warm-white: #faf8f5;
+      --stone: #c4beb5;
+      --sage: #8a9a7b;
+      --sage-light: #e8ede4;
+      --sage-dark: #6b7d5e;
+      --charcoal: #3d3d3b;
+      --whisper: #e8e4de;
+      --gold: #b8a472;
+      --gold-light: #f0ead8;
+      --error: #c4484a;
+      --error-bg: #fdf0f0;
+      --success: #5a7d52;
+      --success-bg: #eef4ec;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "DM Sans", -apple-system, sans-serif;
+      background: var(--parchment);
+      color: var(--ink);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    .card {
+      background: var(--warm-white);
+      border-radius: 12px;
+      padding: 48px 32px;
+      text-align: center;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 4px 32px rgba(26,26,24,0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--sage), var(--gold));
+    }
+
+    .card.error-card::before {
+      background: linear-gradient(90deg, var(--error), var(--gold));
+    }
+
+    .logo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .logo-image {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      display: none;
+    }
+
+    .logo-image.loaded { display: block; }
+
+    .logo-mark {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-size: 28px;
+      font-weight: 300;
+      letter-spacing: 0.06em;
+      color: var(--ink);
+    }
+
+    .logo-sub {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--stone);
+      margin-top: 2px;
+    }
+
+    .divider {
+      width: 48px;
+      height: 1px;
+      background: var(--stone);
+      margin: 24px auto;
+    }
+
+    .view-title {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-size: 28px;
+      font-weight: 400;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+
+    .view-subtitle {
+      font-size: 14px;
+      color: var(--stone);
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    .instructions {
+      background: var(--parchment);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .instructions p {
+      font-size: 13px;
+      color: var(--charcoal);
+      margin-bottom: 4px;
+      line-height: 1.6;
+    }
+
+    .instructions .example {
+      font-size: 15px;
+      color: var(--ink);
+      font-weight: 600;
+      letter-spacing: 1px;
+      background: var(--gold-light);
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 6px;
+      margin-top: 8px;
+    }
+
+    input[type=text] {
+      width: 100%;
+      padding: 16px 18px;
+      font-family: "DM Sans", -apple-system, sans-serif;
+      font-size: 18px;
+      text-align: center;
+      color: var(--ink);
+      background: var(--warm-white);
+      border: 1px solid var(--whisper);
+      border-radius: 6px;
+      outline: none;
+      letter-spacing: 2px;
+      font-weight: 600;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input[type=text]:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px var(--sage-light);
+    }
+
+    input::placeholder {
+      color: var(--stone);
+      font-weight: 400;
+      letter-spacing: 0;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 16px 24px;
+      font-family: "DM Sans", -apple-system, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--warm-white);
+      background: var(--ink);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 16px;
+    }
+
+    .btn:hover { background: var(--charcoal); }
+    .btn:active { transform: scale(0.99); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .footer {
+      color: var(--stone);
+      font-size: 11px;
+      margin-top: 24px;
+      letter-spacing: 0.05em;
+    }
+
+    .check-icon {
+      width: 56px;
+      height: 56px;
+      background: var(--success-bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 28px;
+      color: var(--success);
+    }
+
+    .greeting {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--charcoal);
+      margin-bottom: 8px;
+    }
+
+    .member-name {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-size: 48px;
+      font-weight: 300;
+      color: var(--ink);
+      line-height: 1.1;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .time-badge {
+      display: inline-block;
+      background: var(--sage-light);
+      color: var(--sage-dark);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      padding: 10px 20px;
+      border-radius: 24px;
+      margin-top: 24px;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      color: var(--stone);
+      font-size: 12px;
+      text-decoration: none;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+    }
+
+    .back-link:hover { color: var(--charcoal); }
+
+    .error-image {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+      margin: 0 auto 24px;
+      display: none;
+    }
+
+    .error-image.loaded { display: block; }
+
+    .error-icon-fallback {
+      width: 56px;
+      height: 56px;
+      background: var(--error-bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 28px;
+      color: var(--error);
+    }
+
+    .error-title {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-size: 24px;
+      font-weight: 400;
+      color: var(--error);
+      margin-bottom: 12px;
+    }
+
+    .error-body {
+      font-size: 14px;
+      color: var(--charcoal);
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--warm-white);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in { animation: fadeIn 0.4s ease-out; }
+  </style>
+</head>
+<body>
+
+<div class="card" id="card">
+
+  <div class="logo-container">
+    <img src="/logo2.jpeg" alt="TFC Logo" class="logo-image" id="logo"
+         onload="this.classList.add('loaded')" onerror="">
+    <div>
+      <div class="logo-mark">The Fit Clinic</div>
+      <div class="logo-sub">Client Portal</div>
+    </div>
+  </div>
+  <div class="divider"></div>
+
+  <!-- VIEW: Check-In Form -->
+  <div id="view-form" class="view active">
+    <h1 class="view-title">Check In</h1>
+    <p class="view-subtitle">Enter your personal code to log your visit</p>
+
+    <div class="instructions">
+      <p>Your code is:</p>
+      <p><strong>First letter of first name</strong> + <strong>first letter of last name</strong> + <strong>last 4 digits of phone</strong></p>
+      <p style="margin-top:8px">Example: Jane Smith, phone ending 7890</p>
+      <span class="example">js7890</span>
+    </div>
+
+    <form id="checkin-form">
+      <input type="text" id="code-input" name="id" placeholder="enter your code"
+             autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+      <button type="submit" class="btn" id="submit-btn">Check In</button>
+    </form>
+
+    <p class="footer">Need help? Ask the front desk.</p>
+  </div>
+
+  <!-- VIEW: Success -->
+  <div id="view-success" class="view">
+    <div class="check-icon">&#10003;</div>
+    <p class="greeting">Welcome back,</p>
+    <h1 class="member-name" id="member-name"></h1>
+    <div class="divider"></div>
+    <span class="time-badge" id="checkin-time"></span>
+    <br>
+    <a class="back-link" id="back-link-success">&larr; back to check-in</a>
+  </div>
+
+  <!-- VIEW: Error -->
+  <div id="view-error" class="view">
+    <img src="/Page-Not-Found-3.jpeg" alt="Error" class="error-image" id="error-img"
+         onload="this.classList.add('loaded');document.getElementById('error-icon-fb').style.display='none'"
+         onerror="">
+    <div class="error-icon-fallback" id="error-icon-fb">&#10007;</div>
+    <h2 class="error-title">Not Found</h2>
+    <p class="error-body" id="error-message"></p>
+    <button class="btn" id="back-btn-error" style="display:inline-flex;width:auto;padding:14px 32px;">Try Again</button>
+  </div>
+
+</div>
+
+<script>
+  const form = document.getElementById('checkin-form');
+  const input = document.getElementById('code-input');
+  const submitBtn = document.getElementById('submit-btn');
+  const card = document.getElementById('card');
+
+  function showView(id) {
+    document.querySelectorAll('.view').forEach(function(v) {
+      v.classList.remove('active', 'fade-in');
+    });
+    var view = document.getElementById(id);
+    view.classList.add('active', 'fade-in');
+    card.classList.toggle('error-card', id === 'view-error');
+  }
+
+  function formatTime(isoString) {
+    var d = new Date(isoString);
+    var date = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    var time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    return date + '  \u2022  ' + time;
+  }
+
+  function resetForm() {
+    showView('view-form');
+    input.value = '';
+    input.focus();
+  }
+
+  function showError(code, hint) {
+    var msg = document.getElementById('error-message');
+    // Clear previous content safely
+    msg.textContent = '';
+
+    var codeSpan = document.createElement('strong');
+    codeSpan.textContent = code;
+
+    var line1 = document.createTextNode('Code ');
+    var line2 = document.createTextNode(' not recognized.');
+    var br1 = document.createElement('br');
+    var br2 = document.createElement('br');
+    var hintText = document.createTextNode(
+      hint || 'Your code is the first letter of your first name + first letter of last name + last 4 digits of your phone number.'
+    );
+
+    msg.appendChild(line1);
+    msg.appendChild(codeSpan);
+    msg.appendChild(line2);
+    msg.appendChild(br1);
+    msg.appendChild(br2);
+    msg.appendChild(hintText);
+
+    showView('view-error');
+  }
+
+  var autoRedirect;
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var code = input.value.trim().toLowerCase();
+    if (!code) return;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = '';
+    var spinner = document.createElement('span');
+    spinner.className = 'spinner';
+    submitBtn.appendChild(spinner);
+    submitBtn.appendChild(document.createTextNode(' Checking in...'));
+
+    fetch('/api/checkin?id=' + encodeURIComponent(code))
+      .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, data: data }; }); })
+      .then(function(result) {
+        if (result.ok && result.data.success) {
+          document.getElementById('member-name').textContent = result.data.name;
+          document.getElementById('checkin-time').textContent = formatTime(result.data.timestamp);
+          showView('view-success');
+          clearTimeout(autoRedirect);
+          autoRedirect = setTimeout(resetForm, 10000);
+        } else {
+          showError(code, result.data.hint);
+        }
+      })
+      .catch(function() {
+        document.getElementById('error-message').textContent = 'Connection error. Please try again.';
+        showView('view-error');
+      })
+      .finally(function() {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Check In';
+      });
+  });
+
+  document.getElementById('back-link-success').addEventListener('click', function() {
+    clearTimeout(autoRedirect);
+    resetForm();
+  });
+
+  document.getElementById('back-btn-error').addEventListener('click', resetForm);
+
+  input.focus();
+</script>
+
+</body>
+</html>

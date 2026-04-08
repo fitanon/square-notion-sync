@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TFC Architecture — System Diagram</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #0e0e10;
+    color: #e0ddd8;
+    min-height: 100vh;
+    padding: 48px 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    color: #fff;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: #777;
+    margin-bottom: 48px;
+    letter-spacing: 0.04em;
+  }
+
+  .diagram {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 80px 1fr 80px 1fr;
+    grid-template-rows: auto auto auto auto auto;
+    gap: 24px 0;
+    align-items: start;
+  }
+
+  /* ─── Node styles ─── */
+  .node {
+    border-radius: 12px;
+    padding: 24px;
+    position: relative;
+  }
+
+  .node h3 {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .node ul {
+    list-style: none;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #aaa;
+  }
+
+  .node ul li::before {
+    content: '›';
+    margin-right: 8px;
+    color: #555;
+  }
+
+  .node .tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-left: 4px;
+  }
+
+  /* ─── Color themes ─── */
+  .source {
+    background: #1a1a2e;
+    border: 1px solid #2a2a4a;
+  }
+  .source h3 { color: #7b8cde; }
+  .source .tag { background: #252545; color: #7b8cde; }
+
+  .core {
+    background: #1a2418;
+    border: 1px solid #2a3a28;
+  }
+  .core h3 { color: #8aaa7b; }
+  .core .tag { background: #1e2e1c; color: #8aaa7b; }
+
+  .store {
+    background: #1e1a14;
+    border: 1px solid #3a3020;
+  }
+  .store h3 { color: #c4a855; }
+  .store .tag { background: #2a2418; color: #c4a855; }
+
+  .client {
+    background: #1a1418;
+    border: 1px solid #3a2830;
+  }
+  .client h3 { color: #c47878; }
+  .client .tag { background: #2a1c22; color: #c47878; }
+
+  .payment {
+    background: #14181e;
+    border: 1px solid #283040;
+  }
+  .payment h3 { color: #6aafc4; }
+  .payment .tag { background: #1c2430; color: #6aafc4; }
+
+  /* ─── Arrows ─── */
+  .arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #444;
+    align-self: center;
+  }
+
+  .arrow-down {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #444;
+    grid-column: 1 / -1;
+    padding: 0;
+    line-height: 1;
+  }
+
+  .arrow-label {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: #555;
+    text-transform: uppercase;
+  }
+
+  /* ─── Layout positions ─── */
+  .row-sources { grid-column: 1 / -1; display: flex; gap: 16px; }
+  .row-sources .node { flex: 1; }
+
+  .full-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 80px 1fr 80px 1fr;
+    gap: 0;
+    align-items: stretch;
+  }
+
+  .span-full { grid-column: 1 / -1; }
+
+  /* ─── Section headers ─── */
+  .section-label {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #444;
+    padding: 16px 0 0;
+    border-top: 1px solid #1e1e22;
+  }
+
+  /* ─── Account table ─── */
+  .accounts-table {
+    width: 100%;
+    font-size: 12px;
+    border-collapse: collapse;
+    margin-top: 8px;
+  }
+
+  .accounts-table th {
+    text-align: left;
+    font-weight: 600;
+    color: #888;
+    padding: 6px 12px 6px 0;
+    border-bottom: 1px solid #2a2a2e;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .accounts-table td {
+    padding: 6px 12px 6px 0;
+    border-bottom: 1px solid #1e1e22;
+    color: #aaa;
+  }
+
+  .accounts-table td:first-child {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: #8aaa7b;
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+
+  .status-active { background: #5a5; }
+  .status-legacy { background: #a85; }
+
+  /* ─── Endpoints table ─── */
+  .endpoints {
+    font-size: 12px;
+    margin-top: 8px;
+  }
+
+  .endpoint-row {
+    display: flex;
+    align-items: baseline;
+    padding: 5px 0;
+    border-bottom: 1px solid #1e1e22;
+  }
+
+  .endpoint-method {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-right: 10px;
+    min-width: 40px;
+    text-align: center;
+  }
+
+  .method-get { background: #1a2e1a; color: #6a6; }
+  .method-post { background: #2e2a1a; color: #ca5; }
+
+  .endpoint-path {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: #999;
+    flex: 1;
+  }
+
+  .endpoint-desc {
+    font-size: 11px;
+    color: #555;
+    margin-left: 12px;
+  }
+
+  /* ─── Flow diagram ─── */
+  .flow {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px 0;
+    flex-wrap: wrap;
+  }
+
+  .flow-step {
+    font-size: 12px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+
+  .flow-arrow {
+    color: #444;
+    font-size: 16px;
+  }
+
+  @media (max-width: 768px) {
+    .diagram { grid-template-columns: 1fr; }
+    .full-row { grid-template-columns: 1fr; }
+    .row-sources { flex-direction: column; }
+    .arrow, .arrow-down { display: none; }
+    .flow { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<h1>The Fit Clinic — System Architecture</h1>
+<p class="subtitle">square-notion-sync &middot; Last updated April 2026</p>
+
+<div class="diagram">
+
+  <!-- ═══════ DATA SOURCES ═══════ -->
+  <div class="section-label">Data Sources</div>
+
+  <div class="row-sources">
+    <div class="node source">
+      <h3>Square API <span class="tag">v2</span></h3>
+      <ul>
+        <li>Payments &amp; Transactions</li>
+        <li>Invoices</li>
+        <li>Customers</li>
+        <li>Bookings / Appointments</li>
+        <li>Orders &amp; Line Items</li>
+      </ul>
+      <table class="accounts-table" style="margin-top: 16px;">
+        <tr><th>Code</th><th>Business</th><th>Status</th></tr>
+        <tr><td>PA</td><td>Physiques Anonymous</td><td><span class="status-dot status-active"></span>Primary</td></tr>
+        <tr><td>TFC</td><td>The Fit Clinic LLC</td><td><span class="status-dot status-active"></span>Active</td></tr>
+        <tr><td>FWM</td><td>Fitness With Mike</td><td><span class="status-dot status-legacy"></span>Legacy</td></tr>
+      </table>
+    </div>
+
+    <div class="node payment">
+      <h3>Stripe <span class="tag">Checkout + Elements</span></h3>
+      <ul>
+        <li>Embedded Payment Element</li>
+        <li>Tiered pricing (1 / 5 / 10 / monthly)</li>
+        <li>Webhook auto-sync</li>
+        <li>Subscription management</li>
+      </ul>
+      <div style="margin-top: 16px; font-size: 12px; color: #555; border-top: 1px solid #283040; padding-top: 12px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Single</span><span style="color:#6aafc4">$85</span></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>5-Pack</span><span style="color:#6aafc4">$400</span></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>10-Pack</span><span style="color:#6aafc4">$750</span></div>
+        <div style="display:flex; justify-content:space-between;"><span>Monthly</span><span style="color:#6aafc4">$299/mo</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ CORE ENGINE ═══════ -->
+  <div class="section-label">Core Engine</div>
+
+  <div class="span-full">
+    <div class="node core" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+      <div>
+        <h3>Core Library</h3>
+        <ul>
+          <li><span class="tag">config.py</span> Multi-account config</li>
+          <li><span class="tag">accounts.py</span> Square API client</li>
+          <li><span class="tag">stripe_client.py</span> Stripe client</li>
+          <li><span class="tag">notion.py</span> Notion API client</li>
+          <li><span class="tag">scheduler.py</span> APScheduler (2am)</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Sync Modules</h3>
+        <ul>
+          <li><span class="tag">financial.py</span> Transactions + Invoices</li>
+          <li><span class="tag">appointments.py</span> Bookings + Tandem</li>
+          <li><span class="tag">sessions.py</span> Session balance tracking</li>
+          <li><span class="tag">stripe_payments.py</span> Stripe &rarr; Notion</li>
+          <li><span class="tag">base.py</span> BaseSync abstract class</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ API ═══════ -->
+  <div class="section-label">FastAPI Server</div>
+
+  <div class="span-full">
+    <div class="node core">
+      <h3>API Endpoints <span class="tag">api/app.py</span></h3>
+      <div class="endpoints">
+        <div class="endpoint-row">
+          <span class="endpoint-method method-get">GET</span>
+          <span class="endpoint-path">/health</span>
+          <span class="endpoint-desc">Health check + account status</span>
+        </div>
+        <div class="endpoint-row">
+          <span class="endpoint-method method-get">GET</span>
+          <span class="endpoint-path">/stripe/prices</span>
+          <span class="endpoint-desc">List pricing tiers</span>
+        </div>
+        <div class="endpoint-row">
+          <span class="endpoint-method method-post">POST</span>
+          <span class="endpoint-path">/stripe/checkout</span>
+          <span class="endpoint-desc">Create embedded checkout session</span>
+        </div>
+        <div class="endpoint-row">
+          <span class="endpoint-method method-post">POST</span>
+          <span class="endpoint-path">/stripe/webhook</span>
+          <span class="endpoint-desc">Handle Stripe events</span>
+        </div>
+        <div class="endpoint-row">
+          <span class="endpoint-method method-get">GET</span>
+          <span class="endpoint-path">/portal/lookup</span>
+          <span class="endpoint-desc">Client session balance</span>
+        </div>
+        <div class="endpoint-row">
+          <span class="endpoint-method method-post">POST</span>
+          <span class="endpoint-path">/sync/financial</span>
+          <span class="endpoint-desc">Trigger financial sync</span>
+        </div>
+        <div class="endpoint-row">
+          <span class="endpoint-method method-post">POST</span>
+          <span class="endpoint-path">/sync/appointments</span>
+          <span class="endpoint-desc">Trigger appointments sync</span>
+        </div>
+        <div class="endpoint-row">
+          <span class="endpoint-method method-post">POST</span>
+          <span class="endpoint-path">/sync/sessions</span>
+          <span class="endpoint-desc">Trigger session tracking sync</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ STORAGE ═══════ -->
+  <div class="section-label">Data Storage</div>
+
+  <div class="span-full">
+    <div class="node store">
+      <h3>Notion Databases</h3>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 8px;">
+        <div>
+          <div style="font-size: 12px; font-weight: 600; color: #c4a855; margin-bottom: 6px;">Dashboard 1: Financial</div>
+          <ul>
+            <li>Transactions</li>
+            <li>Invoices</li>
+            <li>Sales / Orders</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-size: 12px; font-weight: 600; color: #c4a855; margin-bottom: 6px;">Dashboard 2: Appointments</div>
+          <ul>
+            <li>Bookings</li>
+            <li>Recurring events</li>
+            <li>Tandem detection</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-size: 12px; font-weight: 600; color: #c4a855; margin-bottom: 6px;">Dashboard 3: Sessions</div>
+          <ul>
+            <li>Client tracker</li>
+            <li>Purchased vs used</li>
+            <li>Stripe payments</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ CLIENT ═══════ -->
+  <div class="section-label">Client-Facing</div>
+
+  <div class="row-sources">
+    <div class="node client">
+      <h3>Client Portal <span class="tag">portal/</span></h3>
+      <ul>
+        <li>Session balance lookup (phone/email)</li>
+        <li>Embedded Stripe Payment Element</li>
+        <li>Tiered pricing display</li>
+        <li>Purchase flow (no redirect)</li>
+      </ul>
+      <div style="margin-top: 12px; font-size: 11px; color: #555;">
+        Deployed: square-notion-sync.vercel.app
+      </div>
+    </div>
+
+    <div class="node source" style="background: #161620; border-color: #252535;">
+      <h3>Related Projects</h3>
+      <ul>
+        <li><span class="tag">tfc-pay</span> Payment page (Manus)</li>
+        <li><span class="tag">tfc-staff</span> Staff dashboard (Vite/React)</li>
+        <li><span class="tag">tfc-dashboard</span> Local env config</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ═══════ PAYMENT FLOW ═══════ -->
+  <div class="section-label">Payment Flow</div>
+
+  <div class="flow">
+    <div class="flow-step client">Client selects tier</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step core">POST /stripe/checkout</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step payment">Payment Element renders</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step payment">Stripe processes card</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step core">Webhook received</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step store">Notion updated</div>
+  </div>
+
+  <!-- ═══════ SYNC FLOW ═══════ -->
+  <div class="section-label">Sync Schedule</div>
+
+  <div class="flow">
+    <div class="flow-step core">APScheduler (2:00 AM ET)</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step source">Fetch from Square (3 accounts)</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step core">Transform + Validate</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step store">Upsert to Notion DBs</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step core">Log sync results</div>
+  </div>
+
+</div>
+
+</body>
+</html>

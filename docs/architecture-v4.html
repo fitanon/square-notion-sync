@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>square-notion-sync v4 — Architecture</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e1e4e8; padding: 40px; }
+  h1 { text-align: center; font-size: 28px; margin-bottom: 8px; color: #D4AF37; }
+  .subtitle { text-align: center; color: #8b949e; margin-bottom: 40px; font-size: 14px; }
+  .diagram { display: flex; flex-direction: column; align-items: center; gap: 24px; max-width: 1000px; margin: 0 auto; }
+  .layer { width: 100%; }
+  .layer-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #8b949e; margin-bottom: 8px; padding-left: 4px; }
+  .row { display: flex; gap: 12px; width: 100%; }
+  .box { border-radius: 10px; padding: 16px; flex: 1; min-height: 80px; }
+  .box h3 { font-size: 14px; margin-bottom: 6px; }
+  .box ul { list-style: none; font-size: 12px; color: #c9d1d9; }
+  .box ul li { padding: 2px 0; }
+  .box ul li::before { content: "→ "; color: #6e7681; }
+
+  /* Layer colors */
+  .interface { background: #1a2332; border: 1px solid #1f6feb; }
+  .interface h3 { color: #58a6ff; }
+  .core { background: #1a2820; border: 1px solid #238636; }
+  .core h3 { color: #3fb950; }
+  .sync { background: #2a1f32; border: 1px solid #8957e5; }
+  .sync h3 { color: #bc8cff; }
+  .external { background: #2a2019; border: 1px solid #d29922; }
+  .external h3 { color: #D4AF37; }
+  .storage { background: #1f1a2a; border: 1px solid #f778ba; }
+  .storage h3 { color: #f778ba; }
+
+  .arrow-row { display: flex; justify-content: center; gap: 40px; padding: 4px 0; }
+  .arrow { color: #484f58; font-size: 20px; }
+  .connector { width: 2px; height: 20px; background: #30363d; margin: 0 auto; }
+
+  .legend { margin-top: 40px; display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #8b949e; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+  .stats { display: flex; justify-content: center; gap: 40px; margin-top: 30px; padding: 20px; background: #161b22; border-radius: 10px; max-width: 800px; margin-left: auto; margin-right: auto; }
+  .stat { text-align: center; }
+  .stat-num { font-size: 28px; font-weight: bold; color: #D4AF37; }
+  .stat-label { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+
+<h1>square-notion-sync v4</h1>
+<p class="subtitle">The Fit Clinic — Multi-Account Data Sync Architecture</p>
+
+<div class="stats">
+  <div class="stat"><div class="stat-num">3</div><div class="stat-label">Square Accounts</div></div>
+  <div class="stat"><div class="stat-num">18+</div><div class="stat-label">API Endpoints</div></div>
+  <div class="stat"><div class="stat-num">5</div><div class="stat-label">Notion Databases</div></div>
+  <div class="stat"><div class="stat-num">4</div><div class="stat-label">Stripe Tiers</div></div>
+  <div class="stat"><div class="stat-num">53</div><div class="stat-label">Tests</div></div>
+</div>
+
+<div class="diagram" style="margin-top: 40px;">
+
+  <!-- Interface Layer -->
+  <div class="layer">
+    <div class="layer-label">Interface Layer</div>
+    <div class="row">
+      <div class="box interface">
+        <h3>CLI (cli.py)</h3>
+        <ul>
+          <li>status — account health</li>
+          <li>customers — list all</li>
+          <li>transactions — recent payments</li>
+          <li>export — JSON snapshots</li>
+          <li>sync — trigger Notion sync</li>
+          <li>server — start FastAPI</li>
+        </ul>
+      </div>
+      <div class="box interface">
+        <h3>FastAPI (api/app.py)</h3>
+        <ul>
+          <li>/sync/* — financial, appointments, sessions</li>
+          <li>/stripe/* — prices, checkout, webhook</li>
+          <li>/portal/lookup — client balance</li>
+          <li>/scheduler/* — status, trigger, pause</li>
+          <li>/reports/* — tandem, low-sessions</li>
+          <li>API key auth + CORS whitelist</li>
+        </ul>
+      </div>
+      <div class="box interface">
+        <h3>Portal (portal/)</h3>
+        <ul>
+          <li>index.html — client landing</li>
+          <li>staff/ — staff dashboard</li>
+          <li>client/ — client home</li>
+          <li>api/checkin.js — QR check-in</li>
+          <li>api/qr.js — QR generation</li>
+          <li>Google Sheets backend</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-row"><span class="arrow">▼</span><span class="arrow">▼</span><span class="arrow">▼</span></div>
+
+  <!-- Core Layer -->
+  <div class="layer">
+    <div class="layer-label">Core Library (core/)</div>
+    <div class="row">
+      <div class="box core">
+        <h3>config.py</h3>
+        <ul>
+          <li>3-account env loading</li>
+          <li>AccountConfig, NotionConfig</li>
+          <li>SyncConfig, Stripe prices</li>
+        </ul>
+      </div>
+      <div class="box core">
+        <h3>accounts.py</h3>
+        <ul>
+          <li>SquareClient (per account)</li>
+          <li>MultiAccountClient (aggregator)</li>
+          <li>Payment, Customer, Booking, Invoice</li>
+          <li>Tandem detection</li>
+        </ul>
+      </div>
+      <div class="box core">
+        <h3>notion.py</h3>
+        <ul>
+          <li>NotionClient</li>
+          <li>query, create, update pages</li>
+          <li>Pagination support</li>
+        </ul>
+      </div>
+      <div class="box core">
+        <h3>stripe_client.py</h3>
+        <ul>
+          <li>4 pricing tiers</li>
+          <li>Checkout sessions</li>
+          <li>Webhook handling</li>
+          <li>Payment normalization</li>
+        </ul>
+      </div>
+    </div>
+    <div class="row" style="margin-top: 12px;">
+      <div class="box core">
+        <h3>scheduler.py</h3>
+        <ul>
+          <li>APScheduler daily sync</li>
+          <li>Pause/resume/trigger</li>
+          <li>Timezone-aware cron</li>
+        </ul>
+      </div>
+      <div class="box core">
+        <h3>database.py</h3>
+        <ul>
+          <li>Neon Postgres (optional)</li>
+          <li>Connection pooling</li>
+          <li>Client lookup fast-path</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-row"><span class="arrow">▼</span><span class="arrow">▼</span></div>
+
+  <!-- Sync Layer -->
+  <div class="layer">
+    <div class="layer-label">Sync Modules (sync/)</div>
+    <div class="row">
+      <div class="box sync">
+        <h3>financial.py</h3>
+        <ul>
+          <li>Transactions → Notion</li>
+          <li>Invoices → Notion</li>
+          <li>30-day window default</li>
+        </ul>
+      </div>
+      <div class="box sync">
+        <h3>appointments.py</h3>
+        <ul>
+          <li>Bookings → Notion</li>
+          <li>Recurring expansion</li>
+          <li>Tandem flagging</li>
+        </ul>
+      </div>
+      <div class="box sync">
+        <h3>sessions.py</h3>
+        <ul>
+          <li>Purchased vs used calc</li>
+          <li>Low-session alerts</li>
+          <li>Tandem summary</li>
+        </ul>
+      </div>
+      <div class="box sync">
+        <h3>stripe_payments.py</h3>
+        <ul>
+          <li>Stripe → Notion</li>
+          <li>Upsert by payment ID</li>
+          <li>Webhook + manual sync</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-row"><span class="arrow">▼</span><span class="arrow">▼</span><span class="arrow">▼</span></div>
+
+  <!-- External Services -->
+  <div class="layer">
+    <div class="layer-label">External Services</div>
+    <div class="row">
+      <div class="box external">
+        <h3>Square API (×3)</h3>
+        <ul>
+          <li>PA — Physiques Anonymous</li>
+          <li>TFC — The Fit Clinic LLC</li>
+          <li>FWM — Fitness With Mike</li>
+        </ul>
+      </div>
+      <div class="box external">
+        <h3>Stripe</h3>
+        <ul>
+          <li>Single $85</li>
+          <li>5-Pack $400</li>
+          <li>10-Pack $750</li>
+          <li>Monthly Unlimited $299</li>
+        </ul>
+      </div>
+      <div class="box external">
+        <h3>Zapier (15 Zaps)</h3>
+        <ul>
+          <li>5 tables × 3 accounts</li>
+          <li>Customers, Transactions</li>
+          <li>Invoices, Sales, Items</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-row"><span class="arrow">▼</span></div>
+
+  <!-- Storage Layer -->
+  <div class="layer">
+    <div class="layer-label">Storage</div>
+    <div class="row">
+      <div class="box storage">
+        <h3>Notion (5 Databases)</h3>
+        <ul>
+          <li>Transactions</li>
+          <li>Invoices</li>
+          <li>Clients</li>
+          <li>Appointments</li>
+          <li>Sessions</li>
+        </ul>
+      </div>
+      <div class="box storage">
+        <h3>Neon Postgres</h3>
+        <ul>
+          <li>Client records</li>
+          <li>Session balances</li>
+          <li>Fast portal lookups</li>
+        </ul>
+      </div>
+      <div class="box storage">
+        <h3>Google Sheets</h3>
+        <ul>
+          <li>Member roster</li>
+          <li>Check-in logs</li>
+          <li>Portal backend</li>
+        </ul>
+      </div>
+      <div class="box storage">
+        <h3>JSON Exports</h3>
+        <ul>
+          <li>Timestamped snapshots</li>
+          <li>Customers, transactions</li>
+          <li>CLI backup tool</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background: #1f6feb;"></div>Interface</div>
+  <div class="legend-item"><div class="legend-dot" style="background: #238636;"></div>Core Library</div>
+  <div class="legend-item"><div class="legend-dot" style="background: #8957e5;"></div>Sync Modules</div>
+  <div class="legend-item"><div class="legend-dot" style="background: #d29922;"></div>External APIs</div>
+  <div class="legend-item"><div class="legend-dot" style="background: #f778ba;"></div>Storage</div>
+</div>
+
+<p style="text-align: center; margin-top: 40px; color: #484f58; font-size: 12px;">
+  square-notion-sync v4 — The Fit Clinic — Updated April 2026
+</p>
+
+</body>
+</html>

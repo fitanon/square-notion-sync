@@ -1,0 +1,14 @@
+{
+  "name": "tfc-checkin",
+  "version": "1.0.0",
+  "description": "The Fit Clinic - Local Check-In Server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "googleapis": "^144.0.0",
+    "qrcode": "^1.5.4"
+  }
+}

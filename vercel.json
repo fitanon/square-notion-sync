@@ -1,0 +1,32 @@
+{
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "portal/index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "portal/client/index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "portal/staff/index.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    { "src": "/stripe/(.*)", "dest": "api/index.py" },
+    { "src": "/portal/(.*)", "dest": "api/index.py" },
+    { "src": "/sync/(.*)", "dest": "api/index.py" },
+    { "src": "/health", "dest": "api/index.py" },
+    { "src": "/config", "dest": "api/index.py" },
+    { "src": "/reports/(.*)", "dest": "api/index.py" },
+    { "src": "/scheduler/(.*)", "dest": "api/index.py" },
+    { "src": "/client", "dest": "portal/client/index.html" },
+    { "src": "/staff", "dest": "portal/staff/index.html" },
+    { "src": "/(.*)", "dest": "portal/index.html" }
+  ]
+}

@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Environment & secrets
+.env
+credentials.json
+*.json.bak
+tokens.json
+
+# Node (portal)
+node_modules/
+portal/node_modules/
+
+# IDE & OS
+.DS_Store
+.vscode/
+.idea/
+
+# Build artifacts
+exports/
+*.zip
+.vercel/

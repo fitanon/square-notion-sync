@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/api/checkin", "destination": "/api/checkin" },
+    { "source": "/api/members", "destination": "/api/members" },
+    { "source": "/api/qr", "destination": "/api/qr" },
+    { "source": "/api/portal-lookup", "destination": "/api/portal-lookup" },
+    { "source": "/qr", "destination": "/api/qr" }
+  ]
+}

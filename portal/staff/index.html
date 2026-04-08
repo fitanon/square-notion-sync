@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TFC Staff Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0e0e10;
+    --bg-raised: #161618;
+    --bg-card: #1a1a1e;
+    --bg-input: #222226;
+    --border: #2a2a2e;
+    --border-hover: #3a3a40;
+    --text: #e0ddd8;
+    --text-dim: #888;
+    --text-muted: #555;
+    --green: #5a5;
+    --green-bg: #1a2e1a;
+    --green-text: #8aaa7b;
+    --yellow: #ca5;
+    --yellow-bg: #2e2a1a;
+    --yellow-text: #c4a855;
+    --red: #c55;
+    --red-bg: #2e1a1a;
+    --red-text: #c47878;
+    --blue: #6aafc4;
+    --blue-bg: #14181e;
+    --blue-text: #6aafc4;
+    --purple: #7b8cde;
+    --purple-bg: #1a1a2e;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.3);
+    --font: 'DM Sans', -apple-system, sans-serif;
+    --mono: 'DM Mono', 'SF Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  /* ─── Auth Gate ─── */
+  #auth-gate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .auth-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 48px 40px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .auth-card h1 {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+
+  .auth-card .subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+
+  .auth-card label {
+    display: block;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .auth-card input {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .auth-card input:focus {
+    border-color: var(--purple);
+  }
+
+  .auth-card button {
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px;
+    background: var(--purple-bg);
+    border: 1px solid #2a2a4a;
+    border-radius: var(--radius);
+    color: var(--purple);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .auth-card button:hover {
+    background: #222240;
+    border-color: var(--purple);
+  }
+
+  .auth-error {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--red-text);
+    display: none;
+  }
+
+  /* ─── Dashboard Shell ─── */
+  #dashboard {
+    display: none;
+  }
+
+  .dash-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .dash-header h1 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .dash-header h1 span {
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .connection-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: background 0.3s;
+  }
+
+  .connection-dot.ok { background: var(--green); }
+  .connection-dot.error { background: var(--red); }
+
+  .btn-icon {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-dim);
+    padding: 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.2s;
+  }
+
+  .btn-icon:hover {
+    border-color: var(--border-hover);
+    color: var(--text);
+  }
+
+  .dash-body {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  /* ─── Stats Row ─── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+  }
+
+  .stat-card .stat-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .stat-card .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .stat-card .stat-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .stat-green .stat-value { color: var(--green-text); }
+  .stat-yellow .stat-value { color: var(--yellow-text); }
+  .stat-red .stat-value { color: var(--red-text); }
+
+  /* ─── Clients Section ─── */
+  .section {
+    margin-bottom: 24px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 10px 16px 10px 36px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    outline: none;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+    position: relative;
+  }
+
+  .search-input:focus {
+    border-color: var(--border-hover);
+  }
+
+  .search-wrap {
+    position: relative;
+  }
+
+  .search-wrap .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    z-index: 1;
+    opacity: 0.4;
+    pointer-events: none;
+    color: var(--text-dim);
+  }
+
+  /* ─── Table ─── */
+  .table-wrap {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.2s;
+    position: relative;
+  }
+
+  thead th:hover {
+    color: var(--text-dim);
+  }
+
+  thead th.sorted-asc::after,
+  thead th.sorted-desc::after {
+    margin-left: 4px;
+    font-size: 9px;
+  }
+
+  thead th.sorted-asc::after { content: ' \25B2'; }
+  thead th.sorted-desc::after { content: ' \25BC'; }
+
+  tbody tr {
+    border-bottom: 1px solid #1e1e22;
+    transition: background 0.15s;
+  }
+
+  tbody tr:hover {
+    background: var(--bg-raised);
+  }
+
+  tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  tbody td {
+    padding: 10px 16px;
+    white-space: nowrap;
+    color: #aaa;
+  }
+
+  tbody td:first-child {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .td-mono {
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  /* Session badges */
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--mono);
+  }
+
+  .badge-red { background: var(--red-bg); color: var(--red-text); }
+  .badge-yellow { background: var(--yellow-bg); color: var(--yellow-text); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); }
+  .badge-blue { background: var(--blue-bg); color: var(--blue-text); }
+
+  .account-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: var(--purple-bg);
+    color: var(--purple);
+    letter-spacing: 0.04em;
+  }
+
+  /* ─── Bottom Grid ─── */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  /* ─── Reports Tables ─── */
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .report-table th {
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .report-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #1e1e22;
+    color: #aaa;
+  }
+
+  .report-empty {
+    text-align: center;
+    padding: 24px;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  /* ─── Sync Controls ─── */
+  .sync-btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .sync-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .sync-btn:hover {
+    border-color: var(--border-hover);
+    background: #282830;
+  }
+
+  .sync-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .sync-btn .arrow {
+    font-size: 14px;
+    color: var(--text-muted);
+    transition: color 0.2s;
+  }
+
+  .sync-btn:hover .arrow {
+    color: var(--green-text);
+  }
+
+  .sync-btn.syncing {
+    border-color: var(--yellow-text);
+  }
+
+  .sync-btn.syncing .arrow {
+    animation: spin 1s linear infinite;
+    color: var(--yellow-text);
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .sync-result {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: var(--bg-input);
+    border-radius: var(--radius);
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    max-height: 120px;
+    overflow-y: auto;
+    display: none;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .sync-result.visible {
+    display: block;
+  }
+
+  .scheduler-status {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .scheduler-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+  }
+
+  .scheduler-row .key { color: var(--text-muted); }
+  .scheduler-row .val { color: var(--text); font-family: var(--mono); font-size: 11px; }
+
+  /* ─── Loading ─── */
+  .loading-bar {
+    height: 2px;
+    background: var(--purple);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 200;
+    transition: width 0.3s ease;
+    display: none;
+  }
+
+  .loading-bar.active {
+    display: block;
+    animation: loading-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes loading-pulse {
+    0% { width: 0%; opacity: 1; }
+    50% { width: 70%; opacity: 0.7; }
+    100% { width: 100%; opacity: 0; }
+  }
+
+  /* ─── Toast ─── */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toast {
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 500;
+    box-shadow: var(--shadow);
+    animation: toast-in 0.3s ease;
+    max-width: 360px;
+  }
+
+  .toast-ok {
+    background: var(--green-bg);
+    border: 1px solid #2a3a28;
+    color: var(--green-text);
+  }
+
+  .toast-error {
+    background: var(--red-bg);
+    border: 1px solid #3a2828;
+    color: var(--red-text);
+  }
+
+  .toast-info {
+    background: var(--blue-bg);
+    border: 1px solid #283040;
+    color: var(--blue-text);
+  }
+
+  @keyframes toast-in {
+    from { transform: translateY(16px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 900px) {
+    .stats-row { grid-template-columns: 1fr; }
+    .bottom-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 600px) {
+    .dash-header { padding: 12px 16px; }
+    .dash-body { padding: 16px; }
+    .dash-header h1 { font-size: 13px; }
+  }
+
+  /* ─── Misc ─── */
+  .hidden { display: none !important; }
+
+  .refresh-note {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-align: right;
+    margin-top: 8px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .config-info {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading bar -->
+<div class="loading-bar" id="loadingBar"></div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toasts"></div>
+
+<!-- AUTH GATE -->
+<div id="auth-gate">
+  <div class="auth-card">
+    <h1>The Fit Clinic</h1>
+    <div class="subtitle">Staff Dashboard</div>
+    <form id="auth-form" autocomplete="off">
+      <label for="api-key-input">API Key</label>
+      <input type="password" id="api-key-input" placeholder="Enter your API key to continue" spellcheck="false" autocomplete="off">
+      <button type="submit">Sign In</button>
+    </form>
+    <div class="auth-error" id="auth-error">Invalid or missing API key</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+
+  <!-- Header -->
+  <div class="dash-header">
+    <h1>The Fit Clinic <span>— Staff Dashboard</span></h1>
+    <div class="header-actions">
+      <div class="connection-dot" id="connectionDot" title="API connection status"></div>
+      <button class="btn-icon" id="refreshBtn" title="Refresh data">Refresh</button>
+      <button class="btn-icon" id="logoutBtn" title="Sign out">Logout</button>
+    </div>
+  </div>
+
+  <div class="dash-body">
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card stat-green">
+        <div class="stat-label">Total Clients</div>
+        <div class="stat-value" id="statClients">--</div>
+        <div class="stat-sub" id="statClientsSub">Loading...</div>
+      </div>
+      <div class="stat-card stat-yellow">
+        <div class="stat-label">Active Sessions</div>
+        <div class="stat-value" id="statSessions">--</div>
+        <div class="stat-sub" id="statSessionsSub">Loading...</div>
+      </div>
+      <div class="stat-card stat-red">
+        <div class="stat-label">Low Session Alerts</div>
+        <div class="stat-value" id="statAlerts">--</div>
+        <div class="stat-sub" id="statAlertsSub">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Clients Table -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Clients</div>
+        <div class="refresh-note" id="lastRefresh"></div>
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon">&#x1F50D;</span>
+        <input type="text" class="search-input" id="clientSearch" placeholder="Search clients by name, email, or phone...">
+      </div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table id="clientsTable">
+            <thead>
+              <tr>
+                <th data-col="name">Name</th>
+                <th data-col="email">Email</th>
+                <th data-col="phone">Phone</th>
+                <th data-col="account">Account</th>
+                <th data-col="purchased">Purchased</th>
+                <th data-col="used">Used</th>
+                <th data-col="remaining">Remaining</th>
+              </tr>
+            </thead>
+            <tbody id="clientsBody">
+              <tr><td colspan="7" class="empty-state">Loading client data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Grid: Reports + Sync -->
+    <div class="bottom-grid">
+
+      <!-- Reports -->
+      <div>
+        <!-- Low Sessions Report -->
+        <div class="card" style="margin-bottom: 16px;">
+          <div class="card-title">Low Sessions (3 or fewer)</div>
+          <div id="lowSessionsReport">
+            <div class="report-empty">Loading...</div>
+          </div>
+        </div>
+
+        <!-- Tandem Report -->
+        <div class="card">
+          <div class="card-title">Tandem Appointments</div>
+          <div id="tandemReport">
+            <div class="report-empty">Loading...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sync Controls -->
+      <div>
+        <div class="card" style="margin-bottom: 16px;">
+          <div class="card-title">Sync Controls</div>
+          <div class="sync-btn-group">
+            <button class="sync-btn" data-endpoint="/sync/all" data-method="POST">
+              <span>Sync All</span>
+              <span class="arrow">&#9654;</span>
+            </button>
+            <button class="sync-btn" data-endpoint="/sync/financial" data-method="POST">
+              <span>Sync Financial</span>
+              <span class="arrow">&#9654;</span>
+            </button>
+            <button class="sync-btn" data-endpoint="/sync/appointments" data-method="POST">
+              <span>Sync Appointments</span>
+              <span class="arrow">&#9654;</span>
+            </button>
+            <button class="sync-btn" data-endpoint="/sync/sessions" data-method="POST">
+              <span>Sync Sessions</span>
+              <span class="arrow">&#9654;</span>
+            </button>
+            <button class="sync-btn" data-endpoint="/sync/stripe/payments" data-method="POST">
+              <span>Sync Stripe</span>
+              <span class="arrow">&#9654;</span>
+            </button>
+          </div>
+          <div class="sync-result" id="syncResult"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Scheduler Status</div>
+          <div class="scheduler-status" id="schedulerStatus">
+            <div class="report-empty">Loading...</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Config Info -->
+    <div class="config-info" id="configInfo"></div>
+
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ─── State ───
+  var apiKey = localStorage.getItem('tfc_api_key') || '';
+  var allClients = [];
+  var sortCol = 'name';
+  var sortDir = 'asc';
+  var refreshTimer = null;
+
+  // ─── DOM helpers ───
+  // All user-facing data is escaped via escapeHtml() before DOM insertion.
+  // Static structural markup (th, labels, placeholders) uses only hardcoded strings.
+  function $(sel) { return document.querySelector(sel); }
+  function $$(sel) { return document.querySelectorAll(sel); }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // Safe DOM builder: creates an element, sets textContent (never innerHTML)
+  function el(tag, attrs, textContent) {
+    var node = document.createElement(tag);
+    if (attrs) {
+      Object.keys(attrs).forEach(function(k) {
+        if (k === 'className') node.className = attrs[k];
+        else if (k === 'style') node.style.cssText = attrs[k];
+        else node.setAttribute(k, attrs[k]);
+      });
+    }
+    if (textContent !== undefined) node.textContent = textContent;
+    return node;
+  }
+
+  var authGate = $('#auth-gate');
+  var dashboard = $('#dashboard');
+  var authForm = $('#auth-form');
+  var authError = $('#auth-error');
+  var apiKeyInput = $('#api-key-input');
+  var loadingBar = $('#loadingBar');
+  var connectionDot = $('#connectionDot');
+
+  // ─── Base URL ───
+  function getBaseUrl() {
+    if (window.location.protocol === 'file:') {
+      return 'http://localhost:8000';
+    }
+    return window.location.origin;
+  }
+
+  // ─── API Helper ───
+  function api(path, opts) {
+    opts = opts || {};
+    var url = getBaseUrl() + path;
+    var headers = {
+      'Content-Type': 'application/json',
+      'X-Api-Key': apiKey
+    };
+    if (opts.headers) {
+      Object.keys(opts.headers).forEach(function(k) { headers[k] = opts.headers[k]; });
+    }
+
+    loadingBar.classList.add('active');
+
+    return fetch(url, {
+      method: opts.method || 'GET',
+      headers: headers,
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+    }).then(function(res) {
+      if (res.status === 401 || res.status === 403) {
+        handleAuthFailure();
+        throw new Error('Unauthorized');
+      }
+      if (!res.ok) {
+        return res.text().then(function(text) {
+          throw new Error(text || ('HTTP ' + res.status));
+        });
+      }
+      return res.json();
+    }).finally(function() {
+      loadingBar.classList.remove('active');
+    });
+  }
+
+  function handleAuthFailure() {
+    localStorage.removeItem('tfc_api_key');
+    apiKey = '';
+    showAuth();
+    toast('Session expired. Please sign in again.', 'error');
+  }
+
+  // ─── Toast ───
+  function toast(msg, type) {
+    type = type || 'info';
+    var container = $('#toasts');
+    var toastEl = el('div', { className: 'toast toast-' + (type === 'success' ? 'ok' : type) }, msg);
+    container.appendChild(toastEl);
+    setTimeout(function() {
+      toastEl.style.opacity = '0';
+      toastEl.style.transform = 'translateY(8px)';
+      toastEl.style.transition = 'all 0.3s';
+      setTimeout(function() { toastEl.remove(); }, 300);
+    }, 4000);
+  }
+
+  // ─── Auth Flow ───
+  function showAuth() {
+    authGate.style.display = 'flex';
+    dashboard.style.display = 'none';
+    clearInterval(refreshTimer);
+  }
+
+  function showDashboard() {
+    authGate.style.display = 'none';
+    dashboard.style.display = 'block';
+    loadAllData();
+    refreshTimer = setInterval(loadAllData, 60000);
+  }
+
+  authForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var key = apiKeyInput.value.trim();
+    if (!key) {
+      authError.style.display = 'block';
+      authError.textContent = 'Please enter an API key';
+      return;
+    }
+
+    apiKey = key;
+    localStorage.setItem('tfc_api_key', key);
+
+    api('/health').then(function() {
+      showDashboard();
+      toast('Connected', 'success');
+    }).catch(function(err) {
+      if (err.message === 'Unauthorized') {
+        authError.style.display = 'block';
+        authError.textContent = 'Invalid API key';
+        localStorage.removeItem('tfc_api_key');
+        apiKey = '';
+        return;
+      }
+      // Server unreachable but key might be valid
+      showDashboard();
+      toast('Connected (server may be unreachable)', 'info');
+    });
+  });
+
+  $('#logoutBtn').addEventListener('click', function() {
+    localStorage.removeItem('tfc_api_key');
+    apiKey = '';
+    apiKeyInput.value = '';
+    authError.style.display = 'none';
+    showAuth();
+  });
+
+  $('#refreshBtn').addEventListener('click', function() {
+    loadAllData();
+    toast('Refreshing...', 'info');
+  });
+
+  // ─── Data Loading ───
+  function loadAllData() {
+    Promise.allSettled([
+      loadHealth(),
+      loadConfig(),
+      loadClients(),
+      loadLowSessions(),
+      loadTandem(),
+      loadScheduler(),
+    ]).then(function() {
+      $('#lastRefresh').textContent = 'Updated ' + new Date().toLocaleTimeString();
+    });
+  }
+
+  function loadHealth() {
+    return api('/health').then(function(data) {
+      connectionDot.className = 'connection-dot ok';
+      connectionDot.title = 'Connected \u2014 ' + (data.accounts_configured || 0) + ' accounts';
+    }).catch(function() {
+      connectionDot.className = 'connection-dot error';
+      connectionDot.title = 'Connection error';
+    });
+  }
+
+  function loadConfig() {
+    return api('/config').then(function(data) {
+      var infoEl = $('#configInfo');
+      infoEl.textContent = '';
+      if (data && typeof data === 'object') {
+        var parts = [];
+        if (data.accounts) parts.push('Accounts: ' + Object.keys(data.accounts).length);
+        if (data.env) parts.push('Env: ' + data.env);
+        if (data.version) parts.push('Version: ' + data.version);
+        infoEl.textContent = parts.join(' \u00B7 ');
+      }
+    }).catch(function() {
+      // Config endpoint may not exist; silently ignore
+    });
+  }
+
+  function loadClients() {
+    return api('/reports/low-sessions?threshold=999').then(function(data) {
+      var clients = normalizeClients(data);
+      allClients = clients;
+      updateStats(clients);
+      renderClients(clients);
+    }).catch(function(err) {
+      var tbody = $('#clientsBody');
+      tbody.textContent = '';
+      var tr = el('tr');
+      var td = el('td', { className: 'empty-state', colspan: '7' }, 'Failed to load clients: ' + err.message);
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      $('#statClients').textContent = '--';
+      $('#statSessions').textContent = '--';
+      $('#statAlerts').textContent = '--';
+    });
+  }
+
+  function normalizeClients(data) {
+    var list = [];
+    if (Array.isArray(data)) {
+      list = data;
+    } else if (data && Array.isArray(data.clients)) {
+      list = data.clients;
+    } else if (data && Array.isArray(data.results)) {
+      list = data.results;
+    } else if (data && Array.isArray(data.data)) {
+      list = data.data;
+    }
+
+    return list.map(function(c) {
+      return {
+        name: c.name || c.client_name || ((c.given_name || '') + ' ' + (c.family_name || '')).trim() || 'Unknown',
+        email: c.email || c.email_address || '',
+        phone: c.phone || c.phone_number || '',
+        account: c.account || c.source || c.account_name || '',
+        purchased: c.purchased || c.sessions_purchased || c.total_purchased || 0,
+        used: c.used || c.sessions_used || c.total_used || 0,
+        remaining: c.remaining !== undefined ? c.remaining : (c.sessions_remaining !== undefined ? c.sessions_remaining : (c.balance !== undefined ? c.balance : null)),
+        unlimited: c.unlimited || c.is_unlimited || false,
+      };
+    });
+  }
+
+  function updateStats(clients) {
+    var total = clients.length;
+    var withSessions = clients.filter(function(c) { return c.remaining !== null && c.remaining !== undefined; });
+    var active = withSessions.filter(function(c) { return c.unlimited || c.remaining > 0; }).length;
+    var low = withSessions.filter(function(c) { return !c.unlimited && c.remaining !== null && c.remaining <= 3; }).length;
+
+    $('#statClients').textContent = total;
+    $('#statClientsSub').textContent = 'across all accounts';
+    $('#statSessions').textContent = active;
+    $('#statSessionsSub').textContent = 'with remaining sessions';
+    $('#statAlerts').textContent = low;
+    $('#statAlertsSub').textContent = '3 or fewer remaining';
+  }
+
+  function renderClients(clients) {
+    var search = ($('#clientSearch').value || '').toLowerCase();
+    var filtered = clients;
+
+    if (search) {
+      filtered = clients.filter(function(c) {
+        return c.name.toLowerCase().indexOf(search) !== -1 ||
+          c.email.toLowerCase().indexOf(search) !== -1 ||
+          c.phone.toLowerCase().indexOf(search) !== -1 ||
+          c.account.toLowerCase().indexOf(search) !== -1;
+      });
+    }
+
+    // Sort
+    filtered.sort(function(a, b) {
+      var av = a[sortCol];
+      var bv = b[sortCol];
+
+      if (sortCol === 'remaining') {
+        av = a.unlimited ? 9999 : (av == null ? -1 : av);
+        bv = b.unlimited ? 9999 : (bv == null ? -1 : bv);
+      }
+
+      if (typeof av === 'string') av = av.toLowerCase();
+      if (typeof bv === 'string') bv = bv.toLowerCase();
+
+      if (av < bv) return sortDir === 'asc' ? -1 : 1;
+      if (av > bv) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    var tbody = $('#clientsBody');
+    tbody.textContent = '';
+
+    if (filtered.length === 0) {
+      var tr = el('tr');
+      var td = el('td', { className: 'empty-state', colspan: '7' },
+        search ? 'No clients match your search' : 'No client data available');
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+
+    filtered.forEach(function(c) {
+      var tr = el('tr');
+
+      // Name
+      tr.appendChild(el('td', {}, c.name));
+
+      // Email
+      var emailTd = el('td', { className: 'td-mono' }, c.email || '--');
+      tr.appendChild(emailTd);
+
+      // Phone
+      tr.appendChild(el('td', { className: 'td-mono' }, c.phone || '--'));
+
+      // Account
+      var acctTd = el('td');
+      var acctSpan = el('span', { className: 'account-tag' }, c.account || '--');
+      acctTd.appendChild(acctSpan);
+      tr.appendChild(acctTd);
+
+      // Purchased
+      tr.appendChild(el('td', { className: 'td-mono' }, String(c.purchased || '--')));
+
+      // Used
+      tr.appendChild(el('td', { className: 'td-mono' }, String(c.used || '--')));
+
+      // Remaining
+      var remTd = el('td');
+      if (c.unlimited) {
+        remTd.appendChild(el('span', { className: 'badge badge-blue' }, 'unlimited'));
+      } else if (c.remaining !== null && c.remaining !== undefined) {
+        remTd.appendChild(el('span', { className: 'badge ' + getBadgeClass(c) }, String(c.remaining)));
+      } else {
+        var dashSpan = el('span', { style: 'color:var(--text-muted)' }, '--');
+        remTd.appendChild(dashSpan);
+      }
+      tr.appendChild(remTd);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function getBadgeClass(client) {
+    if (client.unlimited) return 'badge-blue';
+    if (client.remaining === null || client.remaining === undefined) return '';
+    if (client.remaining <= 0) return 'badge-red';
+    if (client.remaining <= 3) return 'badge-yellow';
+    return 'badge-green';
+  }
+
+  // ─── Reports ───
+  function loadLowSessions() {
+    return api('/reports/low-sessions?threshold=3').then(function(data) {
+      var clients = normalizeClients(data);
+      var container = $('#lowSessionsReport');
+      container.textContent = '';
+
+      if (clients.length === 0) {
+        container.appendChild(el('div', { className: 'report-empty' }, 'No clients with low sessions'));
+        return;
+      }
+
+      var table = el('table', { className: 'report-table' });
+      var thead = el('thead');
+      var headRow = el('tr');
+      headRow.appendChild(el('th', {}, 'Name'));
+      headRow.appendChild(el('th', {}, 'Account'));
+      headRow.appendChild(el('th', {}, 'Remaining'));
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+
+      var tbodyEl = el('tbody');
+      clients.forEach(function(c) {
+        var row = el('tr');
+        row.appendChild(el('td', { style: 'color:var(--text)' }, c.name));
+
+        var acctTd = el('td');
+        acctTd.appendChild(el('span', { className: 'account-tag' }, c.account || '--'));
+        row.appendChild(acctTd);
+
+        var remTd = el('td');
+        if (c.unlimited) {
+          remTd.appendChild(el('span', { className: 'badge badge-blue' }, 'unlimited'));
+        } else {
+          remTd.appendChild(el('span', { className: 'badge ' + getBadgeClass(c) }, String(c.remaining != null ? c.remaining : '--')));
+        }
+        row.appendChild(remTd);
+
+        tbodyEl.appendChild(row);
+      });
+      table.appendChild(tbodyEl);
+      container.appendChild(table);
+    }).catch(function(err) {
+      var container = $('#lowSessionsReport');
+      container.textContent = '';
+      container.appendChild(el('div', { className: 'report-empty' }, 'Failed to load: ' + err.message));
+    });
+  }
+
+  function loadTandem() {
+    return api('/reports/tandem').then(function(data) {
+      var container = $('#tandemReport');
+      container.textContent = '';
+
+      var items = [];
+      if (Array.isArray(data)) items = data;
+      else if (data && Array.isArray(data.appointments)) items = data.appointments;
+      else if (data && Array.isArray(data.results)) items = data.results;
+      else if (data && Array.isArray(data.data)) items = data.data;
+
+      if (items.length === 0) {
+        container.appendChild(el('div', { className: 'report-empty' }, 'No tandem appointments found'));
+        return;
+      }
+
+      var table = el('table', { className: 'report-table' });
+      var thead = el('thead');
+      var headRow = el('tr');
+      headRow.appendChild(el('th', {}, 'Date'));
+      headRow.appendChild(el('th', {}, 'Time'));
+      headRow.appendChild(el('th', {}, 'Clients'));
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+
+      var tbodyEl = el('tbody');
+      items.forEach(function(item) {
+        var row = el('tr');
+        var date = item.date || item.start_date || '--';
+        var time = item.time || item.start_time || '--';
+        var clients = item.clients || item.client_names || item.names || '--';
+        var display = Array.isArray(clients) ? clients.join(', ') : String(clients);
+
+        row.appendChild(el('td', { style: 'color:var(--text)' }, String(date)));
+        row.appendChild(el('td', { className: 'td-mono' }, String(time)));
+        row.appendChild(el('td', {}, display));
+
+        tbodyEl.appendChild(row);
+      });
+      table.appendChild(tbodyEl);
+      container.appendChild(table);
+    }).catch(function(err) {
+      var container = $('#tandemReport');
+      container.textContent = '';
+      container.appendChild(el('div', { className: 'report-empty' }, 'Failed to load: ' + err.message));
+    });
+  }
+
+  // ─── Scheduler ───
+  function loadScheduler() {
+    return api('/scheduler/status').then(function(data) {
+      var container = $('#schedulerStatus');
+      container.textContent = '';
+
+      if (!data || typeof data !== 'object') {
+        container.appendChild(el('div', { className: 'report-empty' }, 'No scheduler data'));
+        return;
+      }
+
+      function addRow(key, val) {
+        var row = el('div', { className: 'scheduler-row' });
+        row.appendChild(el('span', { className: 'key' }, key));
+        row.appendChild(el('span', { className: 'val' }, String(val)));
+        container.appendChild(row);
+      }
+
+      if (data.next_run || data.next_run_time) {
+        addRow('Next run', data.next_run || data.next_run_time);
+      }
+
+      if (data.status) {
+        addRow('Status', data.status);
+      }
+
+      if (data.jobs && Array.isArray(data.jobs)) {
+        data.jobs.forEach(function(job) {
+          addRow(job.name || job.id || 'Job', job.status || job.state || '--');
+        });
+      } else if (data.last_run || data.last_run_time) {
+        addRow('Last run', data.last_run || data.last_run_time);
+      }
+
+      if (data.interval) {
+        addRow('Interval', data.interval);
+      }
+
+      // If nothing was added above, dump all keys
+      if (container.children.length === 0) {
+        Object.keys(data).forEach(function(k) {
+          addRow(k, data[k]);
+        });
+      }
+
+      if (container.children.length === 0) {
+        container.appendChild(el('div', { className: 'report-empty' }, 'No scheduler data'));
+      }
+    }).catch(function() {
+      var container = $('#schedulerStatus');
+      container.textContent = '';
+      container.appendChild(el('div', { className: 'report-empty' }, 'Scheduler unavailable'));
+    });
+  }
+
+  // ─── Sync Buttons ───
+  var syncBtns = $$('.sync-btn');
+  syncBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var endpoint = btn.dataset.endpoint;
+      var method = btn.dataset.method || 'POST';
+
+      if (btn.disabled) return;
+
+      // Disable all sync buttons during operation
+      syncBtns.forEach(function(b) { b.disabled = true; });
+      btn.classList.add('syncing');
+      btn.querySelector('.arrow').textContent = '\u27F3';
+
+      var resultEl = $('#syncResult');
+      resultEl.classList.remove('visible');
+
+      api(endpoint, { method: method }).then(function(data) {
+        resultEl.textContent = JSON.stringify(data, null, 2);
+        resultEl.classList.add('visible');
+        toast('Sync completed: ' + endpoint.split('/').pop(), 'success');
+
+        // Reload data after sync
+        setTimeout(loadAllData, 1000);
+      }).catch(function(err) {
+        resultEl.textContent = 'Error: ' + err.message;
+        resultEl.classList.add('visible');
+        toast('Sync failed: ' + err.message, 'error');
+      }).finally(function() {
+        syncBtns.forEach(function(b) { b.disabled = false; });
+        btn.classList.remove('syncing');
+        btn.querySelector('.arrow').textContent = '\u25B6';
+      });
+    });
+  });
+
+  // ─── Table Sorting ───
+  $$('#clientsTable thead th').forEach(function(th) {
+    th.addEventListener('click', function() {
+      var col = th.dataset.col;
+      if (!col) return;
+
+      if (sortCol === col) {
+        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortCol = col;
+        sortDir = 'asc';
+      }
+
+      $$('#clientsTable thead th').forEach(function(h) {
+        h.classList.remove('sorted-asc', 'sorted-desc');
+      });
+      th.classList.add(sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+
+      renderClients(allClients);
+    });
+  });
+
+  // ─── Search ───
+  var searchTimeout;
+  $('#clientSearch').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(function() { renderClients(allClients); }, 200);
+  });
+
+  // ─── Init ───
+  if (apiKey) {
+    showDashboard();
+  } else {
+    showAuth();
+  }
+
+})();
+</script>
+</body>
+</html>

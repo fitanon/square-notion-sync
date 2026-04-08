@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TFC Ecosystem — Project Map</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #0e0e10;
+    color: #e0ddd8;
+    min-height: 100vh;
+    padding: 48px 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    color: #fff;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 12px;
+    letter-spacing: 0.04em;
+  }
+
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #888;
+    letter-spacing: 0.04em;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .dot-green { background: #4ade80; }
+  .dot-yellow { background: #facc15; }
+  .dot-orange { background: #fb923c; }
+  .dot-red { background: #f87171; }
+  .dot-gray { background: #555; }
+  .dot-blue { background: #60a5fa; }
+
+  /* ─── Hub ─── */
+  .hub {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .tfc-root {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .root-box {
+    display: inline-block;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 2px solid #334;
+    border-radius: 16px;
+    padding: 28px 48px;
+    position: relative;
+  }
+
+  .root-box h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .root-box .root-desc {
+    font-size: 12px;
+    color: #7b8cde;
+    letter-spacing: 0.06em;
+  }
+
+  /* ─── Connector Lines ─── */
+  .connector {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 24px;
+  }
+
+  .connector-line {
+    width: 2px;
+    height: 40px;
+    background: #333;
+    margin: 0 auto;
+  }
+
+  .connector-fork {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    position: relative;
+    margin-bottom: 24px;
+  }
+
+  .connector-fork::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 25%;
+    right: 25%;
+    height: 2px;
+    background: #333;
+  }
+
+  /* ─── Homes Row ─── */
+  .homes {
+    display: grid;
+    grid-template-columns: 1fr 80px 1fr;
+    gap: 0;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .home-section {
+    position: relative;
+  }
+
+  .home-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .divider-line {
+    width: 2px;
+    height: 100%;
+    min-height: 400px;
+    background: linear-gradient(180deg, #333 0%, #222 100%);
+  }
+
+  .divider-label {
+    writing-mode: vertical-lr;
+    text-orientation: mixed;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #444;
+  }
+
+  /* ─── Home Header ─── */
+  .home-header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .home-badge {
+    display: inline-block;
+    padding: 10px 32px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .badge-client {
+    background: linear-gradient(135deg, #0f2a1a, #1a3a28);
+    border: 1px solid #2a4a38;
+    color: #4ade80;
+  }
+
+  .badge-staff {
+    background: linear-gradient(135deg, #2a1a0f, #3a2818);
+    border: 1px solid #4a3828;
+    color: #fb923c;
+  }
+
+  .home-url {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: #555;
+    margin-top: 8px;
+  }
+
+  /* ─── Project Cards ─── */
+  .card {
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    position: relative;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .card-name {
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 6px;
+  }
+
+  .status-heavy {
+    background: rgba(74,222,128,0.12);
+    color: #4ade80;
+  }
+
+  .status-partial {
+    background: rgba(250,204,21,0.12);
+    color: #facc15;
+  }
+
+  .status-prototype {
+    background: rgba(251,146,60,0.12);
+    color: #fb923c;
+  }
+
+  .status-empty {
+    background: rgba(85,85,85,0.2);
+    color: #777;
+  }
+
+  .status-new {
+    background: rgba(96,165,250,0.12);
+    color: #60a5fa;
+  }
+
+  .card-desc {
+    font-size: 12px;
+    color: #999;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .meta-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  .card-source {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: #555;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* Card themes */
+  .card-client {
+    background: #121e16;
+    border: 1px solid #1e3228;
+  }
+  .card-client .card-name { color: #6ee7a0; }
+  .card-client .meta-tag { background: #1a2e20; color: #6ee7a0; }
+
+  .card-staff {
+    background: #1e1610;
+    border: 1px solid #322818;
+  }
+  .card-staff .card-name { color: #fdba74; }
+  .card-staff .meta-tag { background: #2a1e14; color: #fdba74; }
+
+  .card-shared {
+    background: #14141e;
+    border: 1px solid #24243a;
+  }
+  .card-shared .card-name { color: #93a3f8; }
+  .card-shared .meta-tag { background: #1a1a30; color: #93a3f8; }
+
+  .card-new {
+    background: #101820;
+    border: 1px dashed #284060;
+  }
+  .card-new .card-name { color: #60a5fa; }
+  .card-new .meta-tag { background: #142030; color: #60a5fa; }
+
+  /* ─── Shared Backend Section ─── */
+  .shared-section {
+    max-width: 1100px;
+    margin: 48px auto 0;
+    padding-top: 48px;
+    border-top: 1px solid #1e1e22;
+  }
+
+  .section-title {
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 24px;
+  }
+
+  .shared-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* ─── Status Bar ─── */
+  .progress-bar {
+    height: 4px;
+    background: #1e1e22;
+    border-radius: 2px;
+    margin-top: 12px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  .fill-green { background: #4ade80; }
+  .fill-yellow { background: #facc15; }
+  .fill-orange { background: #fb923c; }
+  .fill-red { background: #f87171; }
+  .fill-blue { background: #60a5fa; }
+
+  /* ─── Test badge ─── */
+  .test-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .test-yes {
+    background: rgba(74,222,128,0.1);
+    color: #4ade80;
+  }
+
+  .test-no {
+    background: rgba(248,113,113,0.1);
+    color: #f87171;
+  }
+
+  /* ─── Dead/Killed ─── */
+  .card-dead {
+    background: #1a1012;
+    border: 1px solid #2e1a1a;
+    opacity: 0.7;
+  }
+  .card-dead .card-name { color: #f87171; text-decoration: line-through; }
+  .card-dead .meta-tag { background: #201414; color: #f87171; }
+
+  .status-dead {
+    background: rgba(248,113,113,0.12);
+    color: #f87171;
+  }
+
+  /* ─── Database ─── */
+  .card-db {
+    background: #101822;
+    border: 1px solid #1a2e44;
+  }
+  .card-db .card-name { color: #38bdf8; }
+  .card-db .meta-tag { background: #0e1e30; color: #38bdf8; }
+
+  .status-active {
+    background: rgba(56,189,248,0.12);
+    color: #38bdf8;
+  }
+
+  .db-table-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 12px;
+    margin-top: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: #38bdf8;
+  }
+
+  .db-table-list span {
+    padding: 2px 0;
+  }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 768px) {
+    .homes { grid-template-columns: 1fr; }
+    .home-divider { display: none; }
+    .shared-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ─── Arrow between sections ─── */
+  .section-arrow {
+    text-align: center;
+    font-size: 24px;
+    color: #333;
+    padding: 16px 0;
+  }
+
+  /* ─── Manus origin badge ─── */
+  .origin-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: #1e1428;
+    color: #a78bfa;
+    border: 1px solid #2e2040;
+  }
+</style>
+</head>
+<body>
+
+<h1>The Fit Clinic — Ecosystem Map</h1>
+<p class="subtitle">Proposed tfc-c / tfc-s reorganization &middot; April 2026</p>
+
+<div class="legend">
+  <div class="legend-item"><span class="legend-dot dot-green"></span> Heavy Development (deployed, functional)</div>
+  <div class="legend-item"><span class="legend-dot dot-yellow"></span> Partial (some code, needs work)</div>
+  <div class="legend-item"><span class="legend-dot dot-orange"></span> Prototype (mockup/demo only)</div>
+  <div class="legend-item"><span class="legend-dot dot-gray"></span> Empty / Config Only</div>
+  <div class="legend-item"><span class="legend-dot dot-blue"></span> Proposed (to be created)</div>
+</div>
+
+<div class="hub">
+
+  <!-- ═══════ ROOT ═══════ -->
+  <div class="tfc-root">
+    <div class="root-box">
+      <h2>tfc</h2>
+      <div class="root-desc">Landing Hub &middot; Links to Client &amp; Staff portals</div>
+    </div>
+    <div class="home-url">fitclinic.vercel.app (proposed)</div>
+  </div>
+
+  <div class="connector-line" style="margin: 0 auto;"></div>
+
+  <!-- ═══════ TWO HOMES ═══════ -->
+  <div class="homes">
+
+    <!-- ─── CLIENT HOME ─── -->
+    <div class="home-section">
+      <div class="home-header">
+        <div class="home-badge badge-client">tfc-c</div>
+        <div class="home-url">Client Home &middot; Public-facing</div>
+      </div>
+
+      <!-- tfc-cpay -->
+      <div class="card card-client">
+        <div class="card-header">
+          <div class="card-name">tfc-cpay <span class="origin-badge">manus</span></div>
+          <div class="card-status status-heavy"><span class="legend-dot dot-green" style="width:6px;height:6px;"></span> Heavy Dev</div>
+        </div>
+        <div class="card-desc">
+          Client payment portal. 3 programs (Foundation/Momentum/Transform), 5 frequencies, 3 payment methods.
+          Stripe Checkout with 58 live price IDs. Anonymous checkout (no login required).
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">Vite + React 19</span>
+          <span class="meta-tag">tRPC</span>
+          <span class="meta-tag">Stripe</span>
+          <span class="meta-tag">MySQL/Drizzle</span>
+          <span class="test-badge test-yes">&#10003; 9 tests</span>
+        </div>
+        <div class="card-source">&#8592; from: tfc-pay &middot; /Users/mike/Projects/tfc-pay &middot; Vercel: prj_x5e4me...</div>
+        <div class="progress-bar"><div class="progress-fill fill-green" style="width: 80%"></div></div>
+      </div>
+
+      <!-- tfc-cdashboard -->
+      <div class="card card-client">
+        <div class="card-header">
+          <div class="card-name">tfc-cdashboard</div>
+          <div class="card-status status-partial"><span class="legend-dot dot-yellow" style="width:6px;height:6px;"></span> Partial</div>
+        </div>
+        <div class="card-desc">
+          Client session balance, purchase history, booking view.
+          Exists as tfc-clients in fitclinic-app monorepo.
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">Next.js</span>
+          <span class="meta-tag">Notion API</span>
+          <span class="test-badge test-no">&#10007; No tests</span>
+        </div>
+        <div class="card-source">&#8592; from: tfc-clients &middot; fitclinic-app/portals/client-portal &middot; Vercel: prj_9r4AVn...</div>
+        <div class="progress-bar"><div class="progress-fill fill-yellow" style="width: 40%"></div></div>
+      </div>
+
+      <!-- Client Portal (square-notion-sync) -->
+      <div class="card card-client">
+        <div class="card-header">
+          <div class="card-name">Session Lookup Portal</div>
+          <div class="card-status status-prototype"><span class="legend-dot dot-orange" style="width:6px;height:6px;"></span> Prototype</div>
+        </div>
+        <div class="card-desc">
+          Static HTML session balance lookup (phone/email). Simulated API calls.
+          Preview.html has premium design but is NOT deployed. Index.html is live but basic.
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">Static HTML</span>
+          <span class="meta-tag">Vanilla JS</span>
+          <span class="test-badge test-no">&#10007; No tests</span>
+        </div>
+        <div class="card-source">&#8592; from: square-notion-sync/portal/ &middot; Vercel: prj_Jru3ip...</div>
+        <div class="progress-bar"><div class="progress-fill fill-orange" style="width: 25%"></div></div>
+      </div>
+
+      <!-- tfc-cstaff (proposed) -->
+      <div class="card card-new">
+        <div class="card-header">
+          <div class="card-name">tfc-cstaff</div>
+          <div class="card-status status-new"><span class="legend-dot dot-blue" style="width:6px;height:6px;"></span> Proposed</div>
+        </div>
+        <div class="card-desc">
+          Client view of their trainer/staff. Book appointments, view trainer profile, schedule.
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">TBD</span>
+          <span class="test-badge test-no">&#10007; Not started</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill fill-blue" style="width: 0%"></div></div>
+      </div>
+
+      <!-- Mobile App -->
+      <div class="card card-client" style="opacity: 0.7;">
+        <div class="card-header">
+          <div class="card-name">Mobile App (iOS)</div>
+          <div class="card-status status-partial"><span class="legend-dot dot-yellow" style="width:6px;height:6px;"></span> Partial</div>
+        </div>
+        <div class="card-desc">
+          Native iOS app for client booking and session tracking.
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">Swift / Xcode</span>
+          <span class="test-badge test-no">&#10007; Unknown</span>
+        </div>
+        <div class="card-source">&#8592; from: fitclinic-client-app &middot; Vercel: prj_MxrOpp...</div>
+        <div class="progress-bar"><div class="progress-fill fill-yellow" style="width: 35%"></div></div>
+      </div>
+
+    </div>
+
+    <!-- ─── DIVIDER ─── -->
+    <div class="home-divider">
+      <div class="divider-line"></div>
+    </div>
+
+    <!-- ─── STAFF HOME ─── -->
+    <div class="home-section">
+      <div class="home-header">
+        <div class="home-badge badge-staff">tfc-s</div>
+        <div class="home-url">Staff Home &middot; Authenticated</div>
+      </div>
+
+      <!-- tfc-spay -->
+      <div class="card card-staff">
+        <div class="card-header">
+          <div class="card-name">tfc-spay</div>
+          <div class="card-status status-new"><span class="legend-dot dot-blue" style="width:6px;height:6px;"></span> Proposed</div>
+        </div>
+        <div class="card-desc">
+          Staff payment management. View all purchases, refunds, subscription status.
+          Reuses tfc-pay backend (tRPC adminProcedure already exists).
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">Vite + React</span>
+          <span class="meta-tag">tRPC admin</span>
+          <span class="meta-tag">Stripe Dashboard</span>
+          <span class="test-badge test-no">&#10007; Not started</span>
+        </div>
+        <div class="card-source">Backend ready via tfc-pay server (adminProcedure, listPurchases)</div>
+        <div class="progress-bar"><div class="progress-fill fill-blue" style="width: 15%"></div></div>
+      </div>
+
+      <!-- tfc-sdashboard -->
+      <div class="card card-staff">
+        <div class="card-header">
+          <div class="card-name">tfc-sdashboard</div>
+          <div class="card-status status-partial"><span class="legend-dot dot-yellow" style="width:6px;height:6px;"></span> Partial</div>
+        </div>
+        <div class="card-desc">
+          Staff analytics dashboard. All clients, session counts, revenue, low-session alerts.
+          Multiple versions exist across projects (tfc-mgmt, tfc-hub.jsx, tfc-dashboard).
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">Next.js</span>
+          <span class="meta-tag">Square API</span>
+          <span class="meta-tag">Notion API</span>
+          <span class="test-badge test-no">&#10007; No tests</span>
+        </div>
+        <div class="card-source">
+          &#8592; from: tfc-mgmt (prj_ftBSSZ...) + tfc-hub.jsx + tfc-dashboard (env only)
+        </div>
+        <div class="progress-bar"><div class="progress-fill fill-yellow" style="width: 30%"></div></div>
+      </div>
+
+      <!-- tfc-sstaff -->
+      <div class="card card-staff">
+        <div class="card-header">
+          <div class="card-name">tfc-sstaff</div>
+          <div class="card-status status-partial"><span class="legend-dot dot-yellow" style="width:6px;height:6px;"></span> Partial</div>
+        </div>
+        <div class="card-desc">
+          Staff management portal. Trainer schedules, client assignment, tandem detection, booking management.
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">Vite + React</span>
+          <span class="meta-tag">Square Bookings</span>
+          <span class="test-badge test-no">&#10007; No tests</span>
+        </div>
+        <div class="card-source">&#8592; from: tfc-staff &middot; fitclinic-app/portals/staff-dashboard/v1-staff &middot; Vercel: prj_9jWBaF...</div>
+        <div class="progress-bar"><div class="progress-fill fill-yellow" style="width: 25%"></div></div>
+      </div>
+
+      <!-- Reports -->
+      <div class="card card-staff">
+        <div class="card-header">
+          <div class="card-name">Reports &amp; Analytics</div>
+          <div class="card-status status-heavy"><span class="legend-dot dot-green" style="width:6px;height:6px;"></span> API Ready</div>
+        </div>
+        <div class="card-desc">
+          Tandem report, low-session alerts, financial summaries. APIs built in square-notion-sync, no UI yet.
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">GET /reports/tandem</span>
+          <span class="meta-tag">GET /reports/low-sessions</span>
+          <span class="test-badge test-no">&#10007; No tests</span>
+        </div>
+        <div class="card-source">&#8592; from: square-notion-sync/api/app.py (endpoints exist, need frontend)</div>
+        <div class="progress-bar"><div class="progress-fill fill-green" style="width: 50%"></div></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ═══════ SHARED BACKEND ═══════ -->
+  <div class="shared-section">
+    <div class="section-title">Shared Backend &amp; Integrations</div>
+
+    <div class="shared-grid">
+
+      <div class="card card-shared">
+        <div class="card-header">
+          <div class="card-name">square-notion-sync</div>
+          <div class="card-status status-heavy"><span class="legend-dot dot-green" style="width:6px;height:6px;"></span> Heavy Dev</div>
+        </div>
+        <div class="card-desc">
+          Python FastAPI backend. Multi-account Square sync (PA, TFC, FWM), Notion upsert, Stripe checkout + webhooks, APScheduler (2am daily).
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">Python/FastAPI</span>
+          <span class="meta-tag">Square v2</span>
+          <span class="meta-tag">Notion</span>
+          <span class="meta-tag">Stripe</span>
+          <span class="test-badge test-no">&#10007; No tests</span>
+        </div>
+        <div class="card-source">~2,800 lines Python &middot; 15+ API endpoints &middot; Vercel deployed</div>
+        <div class="progress-bar"><div class="progress-fill fill-green" style="width: 75%"></div></div>
+      </div>
+
+      <div class="card card-shared">
+        <div class="card-header">
+          <div class="card-name">tfc-pay server</div>
+          <div class="card-status status-heavy"><span class="legend-dot dot-green" style="width:6px;height:6px;"></span> Heavy Dev</div>
+        </div>
+        <div class="card-desc">
+          Express + tRPC server. Stripe checkout (58 prices), webhook handling, OAuth auth, MySQL DB with Drizzle (users, purchases, files).
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">Express/tRPC</span>
+          <span class="meta-tag">Drizzle/MySQL</span>
+          <span class="meta-tag">OAuth</span>
+          <span class="meta-tag">Stripe</span>
+          <span class="test-badge test-yes">&#10003; 9+ tests</span>
+        </div>
+        <div class="card-source">12,700+ lines TypeScript &middot; 3 DB tables &middot; Vercel linked</div>
+        <div class="progress-bar"><div class="progress-fill fill-green" style="width: 80%"></div></div>
+      </div>
+
+      <div class="card card-shared">
+        <div class="card-header">
+          <div class="card-name">External Services</div>
+          <div class="card-status status-heavy"><span class="legend-dot dot-green" style="width:6px;height:6px;"></span> Connected</div>
+        </div>
+        <div class="card-desc">
+          Live API tokens configured across projects.
+        </div>
+        <div style="margin-top: 12px; font-size: 12px; color: #666;">
+          <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #1e1e28;">
+            <span>Square (3 accounts)</span>
+            <span style="color:#4ade80;">&#10003; Live</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #1e1e28;">
+            <span>Stripe (58 prices)</span>
+            <span style="color:#4ade80;">&#10003; Live keys</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #1e1e28;">
+            <span>Notion</span>
+            <span style="color:#facc15;">&#9888; Token placeholder</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #1e1e28;">
+            <span>Vercel</span>
+            <span style="color:#4ade80;">&#10003; Auth'd (fitclinic)</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #1e1e28;">
+            <span>GitHub</span>
+            <span style="color:#4ade80;">&#10003; Auth'd (fitanon)</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #1e1e28;">
+            <span>Google Sheets</span>
+            <span style="color:#facc15;">&#9888; Sheet ID missing</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #1e1e28;">
+            <span>Neon Postgres (mobile app)</span>
+            <span style="color:#4ade80;">&#10003; DATABASE_URL</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:4px 0;">
+            <span>MySQL (tfc-pay)</span>
+            <span style="color:#4ade80;">&#10003; DATABASE_URL</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════ VERCEL PROJECTS ═══════ -->
+  <div class="shared-section">
+    <div class="section-title">All Vercel Projects (fitclinic team)</div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;">
+      <div style="background:#161620; border:1px solid #252535; border-radius:8px; padding:12px; font-size:11px;">
+        <div style="color:#93a3f8; font-weight:600; margin-bottom:4px;">square-notion-sync</div>
+        <div style="color:#666;">Python API + Portal</div>
+        <div style="color:#4ade80; font-size:10px; margin-top:4px;">&#9679; Active</div>
+      </div>
+      <div style="background:#161620; border:1px solid #252535; border-radius:8px; padding:12px; font-size:11px;">
+        <div style="color:#93a3f8; font-weight:600; margin-bottom:4px;">tfc-pay</div>
+        <div style="color:#666;">Stripe Payment Portal</div>
+        <div style="color:#4ade80; font-size:10px; margin-top:4px;">&#9679; Active</div>
+      </div>
+      <div style="background:#161620; border:1px solid #252535; border-radius:8px; padding:12px; font-size:11px;">
+        <div style="color:#93a3f8; font-weight:600; margin-bottom:4px;">tfc-home</div>
+        <div style="color:#666;">Landing Page</div>
+        <div style="color:#facc15; font-size:10px; margin-top:4px;">&#9679; Linked</div>
+      </div>
+      <div style="background:#161620; border:1px solid #252535; border-radius:8px; padding:12px; font-size:11px;">
+        <div style="color:#93a3f8; font-weight:600; margin-bottom:4px;">tfc-portal</div>
+        <div style="color:#666;">Hub Portal</div>
+        <div style="color:#facc15; font-size:10px; margin-top:4px;">&#9679; Linked</div>
+      </div>
+      <div style="background:#161620; border:1px solid #252535; border-radius:8px; padding:12px; font-size:11px;">
+        <div style="color:#93a3f8; font-weight:600; margin-bottom:4px;">tfc-clients</div>
+        <div style="color:#666;">Client Dashboard</div>
+        <div style="color:#facc15; font-size:10px; margin-top:4px;">&#9679; Linked</div>
+      </div>
+      <div style="background:#161620; border:1px solid #252535; border-radius:8px; padding:12px; font-size:11px;">
+        <div style="color:#93a3f8; font-weight:600; margin-bottom:4px;">tfc-staff</div>
+        <div style="color:#666;">Staff Dashboard</div>
+        <div style="color:#facc15; font-size:10px; margin-top:4px;">&#9679; Linked</div>
+      </div>
+      <div style="background:#161620; border:1px solid #252535; border-radius:8px; padding:12px; font-size:11px;">
+        <div style="color:#93a3f8; font-weight:600; margin-bottom:4px;">tfc-mgmt</div>
+        <div style="color:#666;">Management</div>
+        <div style="color:#facc15; font-size:10px; margin-top:4px;">&#9679; Linked</div>
+      </div>
+      <div style="background:#161620; border:1px solid #252535; border-radius:8px; padding:12px; font-size:11px;">
+        <div style="color:#93a3f8; font-weight:600; margin-bottom:4px;">fitclinic-portal</div>
+        <div style="color:#666;">Alt Portal (v2)</div>
+        <div style="color:#facc15; font-size:10px; margin-top:4px;">&#9679; Linked</div>
+      </div>
+      <div style="background:#161620; border:1px solid #252535; border-radius:8px; padding:12px; font-size:11px;">
+        <div style="color:#93a3f8; font-weight:600; margin-bottom:4px;">fitclinic-client-app</div>
+        <div style="color:#666;">iOS Mobile</div>
+        <div style="color:#fb923c; font-size:10px; margin-top:4px;">&#9679; WIP</div>
+      </div>
+      <div style="background:#161620; border:1px solid #252535; border-radius:8px; padding:12px; font-size:11px;">
+        <div style="color:#93a3f8; font-weight:600; margin-bottom:4px;">database-sync</div>
+        <div style="color:#666;">Automation</div>
+        <div style="color:#666; font-size:10px; margin-top:4px;">&#9679; Unknown</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ NEON POSTGRES ═══════ -->
+  <div class="shared-section">
+    <div class="section-title">Database &mdash; Neon Postgres</div>
+
+    <div class="shared-grid" style="grid-template-columns: 1fr 1fr;">
+
+      <div class="card card-db">
+        <div class="card-header">
+          <div class="card-name">Neon Postgres (Mobile App)</div>
+          <div class="card-status status-active"><span class="legend-dot dot-blue" style="width:6px;height:6px;"></span> Active</div>
+        </div>
+        <div class="card-desc">
+          PostgreSQL database hosted on Neon, used by the mobile app backend.
+          Configured via DATABASE_URL in .env.local. Dialect: postgresql.
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">Neon</span>
+          <span class="meta-tag">PostgreSQL</span>
+          <span class="meta-tag">8 tables</span>
+        </div>
+        <div class="db-table-list">
+          <span>trainers</span>
+          <span>clients</span>
+          <span>packages</span>
+          <span>client_packages</span>
+          <span>appointments</span>
+          <span>availability_slots</span>
+          <span>sessions</span>
+          <span>app_config</span>
+        </div>
+        <div class="card-source">&#8592; /Users/mike/Projects/mobile app/Fit Clinic Client App V1/ &middot; .env.local</div>
+        <div class="progress-bar"><div class="progress-fill fill-blue" style="width: 60%"></div></div>
+      </div>
+
+      <div class="card card-db" style="opacity: 0.6;">
+        <div class="card-header">
+          <div class="card-name">MySQL (tfc-pay)</div>
+          <div class="card-status status-active"><span class="legend-dot dot-green" style="width:6px;height:6px;"></span> Active</div>
+        </div>
+        <div class="card-desc">
+          MySQL via Drizzle ORM, used by tfc-pay server.
+          Tables: users, purchases, files.
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">MySQL</span>
+          <span class="meta-tag">Drizzle</span>
+          <span class="meta-tag">3 tables</span>
+        </div>
+        <div class="card-source">&#8592; from tfc-pay server &middot; DATABASE_URL configured</div>
+        <div class="progress-bar"><div class="progress-fill fill-green" style="width: 80%"></div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════ DEAD / KILLED ═══════ -->
+  <div class="shared-section" style="border-top-color: #f8717133;">
+    <div class="section-title" style="color: #f87171;">Dead / Killed &mdash; Removed or Consolidated</div>
+
+    <div class="shared-grid">
+
+      <div class="card card-dead">
+        <div class="card-header">
+          <div class="card-name">package-calc.tsx</div>
+          <div class="card-status status-dead"><span class="legend-dot dot-red" style="width:6px;height:6px;"></span> Deleted</div>
+        </div>
+        <div class="card-desc">
+          Standalone React package calculator. No build config, no deploy, no imports.
+          47KB of dead code.
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">React TSX</span>
+          <span class="meta-tag">Standalone</span>
+        </div>
+        <div class="card-source">&#8592; was: fitclinic-app/tools/package-calculator/package-calc.tsx</div>
+      </div>
+
+      <div class="card card-dead">
+        <div class="card-header">
+          <div class="card-name">package-calculator.tsx</div>
+          <div class="card-status status-dead"><span class="legend-dot dot-red" style="width:6px;height:6px;"></span> Deleted</div>
+        </div>
+        <div class="card-desc">
+          Empty file (0 bytes). Likely an abandoned rename.
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">Empty</span>
+        </div>
+        <div class="card-source">&#8592; was: fitclinic-app/tools/package-calculator/package-calculator.tsx</div>
+      </div>
+
+      <div class="card card-dead">
+        <div class="card-header">
+          <div class="card-name">prices/ directory</div>
+          <div class="card-status status-dead"><span class="legend-dot dot-red" style="width:6px;height:6px;"></span> Deleted</div>
+        </div>
+        <div class="card-desc">
+          Empty directory with only .DS_Store. No code, no config.
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">Empty dir</span>
+        </div>
+        <div class="card-source">&#8592; was: fitclinic-app/tools/package-calculator/prices/</div>
+      </div>
+
+    </div>
+
+    <div style="max-width: 700px; margin: 24px auto 0; font-size: 12px; color: #888; line-height: 1.7; text-align: center;">
+      <p><strong style="color:#fdba74;">Note:</strong> <code style="color:#fdba74;">v1 - payroll-dashboard/</code> is misplaced inside package-calculator/ &mdash; needs to be relocated.</p>
+      <p style="margin-top:6px;"><strong style="color:#6ee7a0;">Kept:</strong> v1 - fullpricelist/ (has index.html), All Prices/ (has project inside), all PDF/XLSX/DOCX/JPG reference docs.</p>
+    </div>
+  </div>
+
+  <!-- ═══════ KEY INSIGHT ═══════ -->
+  <div class="shared-section" style="border-top-color: #f8717133;">
+    <div class="section-title" style="color: #f87171;">Key Problem: Overlap &amp; Fragmentation</div>
+    <div style="max-width: 700px; margin: 0 auto; font-size: 13px; color: #999; line-height: 1.8; text-align: center;">
+      <p>There are <strong style="color:#fff;">10+ Vercel projects</strong> with heavy overlap.
+      Payment handling exists in both <strong style="color:#6ee7a0;">tfc-pay</strong> (Stripe Checkout, 58 prices, MySQL)
+      and <strong style="color:#6ee7a0;">square-notion-sync</strong> (Stripe Checkout, 4 tiers, Notion).
+      Client dashboards span <strong style="color:#facc15;">tfc-clients</strong>, <strong style="color:#facc15;">portal/</strong>,
+      and <strong style="color:#facc15;">tfc-hub.jsx</strong>.
+      Staff views are scattered across <strong style="color:#fdba74;">tfc-staff</strong>, <strong style="color:#fdba74;">tfc-mgmt</strong>,
+      and <strong style="color:#fdba74;">fitclinic-portal</strong>.</p>
+      <p style="margin-top: 16px; color: #60a5fa;">
+        The <strong>tfc-c</strong> / <strong>tfc-s</strong> reorganization consolidates all of this
+        into two clear homes with shared backend services.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,23 @@
+"""
+Square-Notion Core Library
+
+Multi-account Square API client and Notion sync infrastructure.
+"""
+
+from .config import Config, AccountConfig
+from .accounts import SquareClient, MultiAccountClient
+from .database import DatabaseClient
+from .notion import NotionClient
+from .scheduler import SyncScheduler
+from .stripe_client import StripeClient
+
+__all__ = [
+    'Config',
+    'AccountConfig',
+    'SquareClient',
+    'MultiAccountClient',
+    'DatabaseClient',
+    'NotionClient',
+    'SyncScheduler',
+    'StripeClient',
+]
