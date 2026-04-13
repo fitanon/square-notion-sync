@@ -169,8 +169,18 @@ Optional filters so you can mirror only "some" responses:
 - `--row-numbers 2,7,12` mirror specific sheet rows
 - `--contains completed` mirror rows containing a keyword
 - `--columns "Timestamp,Name,Email,Goals"` include only chosen columns
+- `--use-questionnaire-default-fields` include: first/last name, goals, phone, email, AI medical summary, training history, nutrition history, other details, submission date
 - `--limit 10` cap total mirrored rows
 - `--dry-run` preview selection without writing to Notion
+
+Field set command matching the Fit Clinic questionnaire:
+
+```bash
+python scripts/mirror_questionnaires_to_notion.py \
+  --worksheet "Questionnaire Responses" \
+  --database-title "TFC Questionnaire Intake Mirror" \
+  --use-questionnaire-default-fields
+```
 
 ## Security
 

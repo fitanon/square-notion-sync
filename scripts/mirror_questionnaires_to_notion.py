@@ -36,6 +36,32 @@ NOTION_API_BASE = "https://api.notion.com/v1"
 DEFAULT_NOTION_VERSION = "2022-06-28"
 DEFAULT_TITLE = "Questionnaire Responses Mirror"
 MAX_NOTION_TEXT_LENGTH = 2000
+QUESTIONNAIRE_DEFAULT_FIELDS = [
+    "first and last name",
+    "goals",
+    "phone number",
+    "email",
+    "ai summary of medical history",
+    "training history",
+    "nutrition history",
+    "any other details",
+    "date of submission",
+]
+QUESTIONNAIRE_FIELD_ALIASES: Dict[str, List[str]] = {
+    "goals": ["goals", "goal", "fitness goals", "primary goals"],
+    "phone number": ["phone number", "phone", "mobile", "cell", "contact number"],
+    "email": ["email", "email address", "e-mail"],
+    "ai summary of medical history": [
+        "ai summary of medical history",
+        "medical history ai summary",
+        "medical history summary",
+        "medical history",
+    ],
+    "training history": ["training history", "trainiing history", "exercise history", "workout history"],
+    "nutrition history": ["nutrition history", "diet history", "nutrition", "dietary history"],
+    "any other details": ["any other details", "additional details", "other details", "notes", "comments"],
+    "date of submission": ["date of submission", "submission date", "submitted at", "timestamp", "created at"],
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -107,6 +133,14 @@ def parse_args() -> argparse.Namespace:
         help="Comma-separated list of column headers to include. Defaults to all headers.",
     )
     parser.add_argument(
+        "--use-questionnaire-default-fields",
+        action="store_true",
+        help=(
+            "Use a built-in questionnaire field set: first/last name, goals, phone, email, "
+            "AI medical summary, training history, nutrition history, other details, submission date."
+        ),
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Print plan only (no Notion writes).",
@@ -126,6 +160,78 @@ def parse_row_numbers(raw: str) -> List[int]:
         except ValueError as exc:
             raise ValueError(f"Invalid row number '{item}'. Use integers like 2,5,9.") from exc
     return row_numbers
+
+
+def normalize(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", value.lower())
+
+
+def find_best_header(headers: Sequence[str], aliases: Sequence[str]) -> str | None:
+    best_header = None
+    best_score = 0
+    for alias in aliases:
+        alias_norm = normalize(alias)
+        if not alias_norm:
+            continue
+        for header in headers:
+            header_norm = normalize(header)
+            score = 0
+            if header_norm == alias_norm:
+                score = 3
+            elif alias_norm in header_norm:
+                score = 2
+            elif header_norm in alias_norm:
+                score = 1
+
+            if score > best_score:
+                best_score = score
+                best_header = header
+    return best_header
+
+
+def resolve_requested_columns(requested_columns: Sequence[str], headers: Sequence[str]) -> Tuple[List[str], List[str]]:
+    selected: List[str] = []
+    unresolved: List[str] = []
+
+    for requested in requested_columns:
+        requested_norm = normalize(requested)
+
+        # Prefer direct case-insensitive exact match first.
+        exact_header = find_best_header(headers, [requested])
+        if exact_header:
+            if exact_header not in selected:
+                selected.append(exact_header)
+            continue
+
+        # Handle "first and last name" as either two columns or one full-name column.
+        if requested_norm in {"firstandlastname", "firstnameandlastname"}:
+            first_header = find_best_header(headers, ["first name", "firstname", "given name"])
+            last_header = find_best_header(headers, ["last name", "lastname", "family name", "surname"])
+            if first_header and last_header:
+                if first_header not in selected:
+                    selected.append(first_header)
+                if last_header not in selected:
+                    selected.append(last_header)
+                continue
+
+            full_name_header = find_best_header(headers, ["full name", "client name", "name"])
+            if full_name_header:
+                if full_name_header not in selected:
+                    selected.append(full_name_header)
+                continue
+
+            unresolved.append(requested)
+            continue
+
+        aliases = QUESTIONNAIRE_FIELD_ALIASES.get(requested.lower().strip(), [requested])
+        matched = find_best_header(headers, aliases)
+        if matched:
+            if matched not in selected:
+                selected.append(matched)
+        else:
+            unresolved.append(requested)
+
+    return selected, unresolved
 
 
 def notion_headers(token: str, notion_version: str) -> Dict[str, str]:
@@ -330,6 +436,8 @@ def main() -> int:
         return 1
 
     requested_columns = parse_comma_list(args.columns)
+    if args.use_questionnaire_default_fields:
+        requested_columns = list(QUESTIONNAIRE_DEFAULT_FIELDS)
 
     try:
         worksheet_title, headers, rows = load_google_sheet_rows(
@@ -346,12 +454,14 @@ def main() -> int:
         print("No headers found in worksheet. Nothing to mirror.")
         return 0
 
-    selected_headers = requested_columns if requested_columns else headers
-    missing_headers = [header for header in selected_headers if header not in headers]
-    if missing_headers:
-        print(f"ERROR: Requested columns not found: {missing_headers}")
-        print(f"Available headers: {headers}")
-        return 1
+    if requested_columns:
+        selected_headers, missing_headers = resolve_requested_columns(requested_columns, headers)
+        if missing_headers:
+            print(f"ERROR: Requested columns not found: {missing_headers}")
+            print(f"Available headers: {headers}")
+            return 1
+    else:
+        selected_headers = headers
 
     selected_rows = select_rows(
         rows=rows,
