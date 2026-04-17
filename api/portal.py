@@ -490,7 +490,11 @@ def get_portal_html() -> str:
         });
 
         function showError(message) {
-            result.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
+            result.textContent = '';
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            result.appendChild(errorDiv);
             result.classList.add('show');
         }
 

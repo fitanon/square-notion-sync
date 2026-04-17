@@ -607,10 +607,18 @@ def get_portal_html() -> str:
         }});
 
         function showError(message) {{
-            result.innerHTML = `
-                <div class="error-box">${{escapeHtml(message)}}</div>
-                <button class="reset" onclick="resetForm()">Try again</button>
-            `;
+            result.textContent = '';
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-box';
+            errorDiv.textContent = message;
+            result.appendChild(errorDiv);
+
+            const btn = document.createElement('button');
+            btn.className = 'reset';
+            btn.textContent = 'Try again';
+            btn.addEventListener('click', resetForm);
+            result.appendChild(btn);
+
             result.classList.add('show');
         }}
 
@@ -628,24 +636,49 @@ def get_portal_html() -> str:
                 statusText = 'Running low';
             }}
 
-            result.innerHTML = `
-                <div class="client-name">${{escapeHtml(c.name)}}</div>
-                <div class="sessions-count">${{parseInt(remaining) || 0}}</div>
-                <div class="sessions-label">sessions remaining</div>
-                <div class="status ${{statusClass}}">${{statusText}}</div>
-                <div class="stats">
-                    <div class="stat">
-                        <div class="stat-value">${{parseInt(c.sessions_purchased) || 0}}</div>
-                        <div class="stat-label">Purchased</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value">${{parseInt(c.sessions_used) || 0}}</div>
-                        <div class="stat-label">Used</div>
-                    </div>
-                </div>
-                ${{c.last_synced ? `<div class="meta">Updated ${{escapeHtml(formatDate(c.last_synced))}}</div>` : ''}}
-                <button class="reset" onclick="resetForm()">Check another</button>
+            result.textContent = '';
+
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'client-name';
+            nameDiv.textContent = c.name;
+            result.appendChild(nameDiv);
+
+            const countDiv = document.createElement('div');
+            countDiv.className = 'sessions-count';
+            countDiv.textContent = parseInt(remaining) || 0;
+            result.appendChild(countDiv);
+
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'sessions-label';
+            labelDiv.textContent = 'sessions remaining';
+            result.appendChild(labelDiv);
+
+            const statusDiv = document.createElement('div');
+            statusDiv.className = 'status ' + statusClass;
+            statusDiv.textContent = statusText;
+            result.appendChild(statusDiv);
+
+            const statsDiv = document.createElement('div');
+            statsDiv.className = 'stats';
+            statsDiv.innerHTML = `
+                <div class="stat"><div class="stat-value">${{parseInt(c.sessions_purchased) || 0}}</div><div class="stat-label">Purchased</div></div>
+                <div class="stat"><div class="stat-value">${{parseInt(c.sessions_used) || 0}}</div><div class="stat-label">Used</div></div>
             `;
+            result.appendChild(statsDiv);
+
+            if (c.last_synced) {{
+                const metaDiv = document.createElement('div');
+                metaDiv.className = 'meta';
+                metaDiv.textContent = 'Updated ' + formatDate(c.last_synced);
+                result.appendChild(metaDiv);
+            }}
+
+            const btn = document.createElement('button');
+            btn.className = 'reset';
+            btn.textContent = 'Check another';
+            btn.addEventListener('click', resetForm);
+            result.appendChild(btn);
+
             result.classList.add('show');
         }}
 
