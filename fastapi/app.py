@@ -34,12 +34,12 @@ def sync_customer(customer_id: str, account_name: str = None):
         key = f'ACCOUNT__{account_name.upper()}__TOKEN'
         token = os.getenv(key)
         if not token:
-            raise HTTPException(status_code=404, detail=f'Account token for {account_name} not found in env var {key}')
+            raise HTTPException(status_code=404, detail='Account not configured')
     else:
         # fall back to a default env var
         token = os.getenv('SQUARE_ACCESS_TOKEN')
         if not token:
-            raise HTTPException(status_code=400, detail='No account_name provided and SQUARE_ACCESS_TOKEN not set')
+            raise HTTPException(status_code=400, detail='Account not configured')
 
     customer = accounts.get_customer(customer_id, token)
     if not customer:
