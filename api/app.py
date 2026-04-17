@@ -140,7 +140,7 @@ def register_routes(app: FastAPI):
         config = request.app.state.config
         return {
             "accounts": [
-                {"code": acc.code, "name": acc.name, "environment": acc.environment}
+                {"code": acc.code, "name": acc.name}
                 for acc in config.accounts.values()
             ],
             "notion_configured": config.notion is not None,
@@ -149,7 +149,6 @@ def register_routes(app: FastAPI):
                 "minute": config.sync.schedule_minute,
                 "timezone": config.sync.timezone,
             },
-            "session_item_name": config.sync.session_item_name,
         }
 
     # ─────────────────────────────────────────────────────────────
