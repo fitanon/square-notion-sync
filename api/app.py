@@ -9,6 +9,7 @@ Provides:
 """
 
 import logging
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -286,14 +287,29 @@ def register_routes(app: FastAPI):
     @app.post("/stripe/checkout")
     def create_checkout(
         request: Request,
-        price_id: str = Query(..., description="Stripe Price ID"),
-        customer_email: Optional[str] = Query(None, description="Customer email"),
-        success_url: str = Query("https://example.com/success"),
-        cancel_url: str = Query("https://example.com/cancel"),
+        price_key: str = Query(..., description="Price tier key (1_SESSION, 5_SESSIONS, 10_SESSIONS, MONTHLY)"),
+        customer_email: Optional[str] = Query(None, description="Customer email", pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$"),
     ):
         """Create a Stripe Checkout session."""
         if not request.app.state.stripe_client:
             raise HTTPException(status_code=503, detail="Stripe not configured")
+
+        config = request.app.state.config
+
+        # Validate price_key against configured prices
+        if price_key not in config.stripe.prices:
+            valid_keys = list(config.stripe.prices.keys())
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid price_key. Valid options: {valid_keys}"
+            )
+
+        price_id = config.stripe.prices[price_key]
+
+        # Use server-configured URLs (not user-controlled)
+        base_url = os.getenv("APP_BASE_URL", "https://square-notion-sync.vercel.app")
+        success_url = f"{base_url}/checkout/success"
+        cancel_url = f"{base_url}/checkout/cancel"
 
         try:
             url = request.app.state.stripe_client.create_checkout_session(
@@ -344,8 +360,9 @@ def register_routes(app: FastAPI):
             )
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid payload")
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=str(e))
+        except Exception:
+            logger.exception("Webhook signature verification failed")
+            raise HTTPException(status_code=400, detail="Webhook verification failed")
 
         result = request.app.state.stripe_client.handle_webhook_event(event)
         logger.info(f"Processed webhook: {event.type}")

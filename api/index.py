@@ -557,6 +557,14 @@ def get_portal_html() -> str:
         const result = document.getElementById('result');
         const submitBtn = document.getElementById('submitBtn');
 
+        // Escape HTML to prevent XSS
+        function escapeHtml(str) {{
+            if (str == null) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }}
+
         form.addEventListener('submit', async (e) => {{
             e.preventDefault();
             const phone = document.getElementById('phone').value.trim();
@@ -597,7 +605,7 @@ def get_portal_html() -> str:
 
         function showError(message) {{
             result.innerHTML = `
-                <div class="error-box">${{message}}</div>
+                <div class="error-box">${{escapeHtml(message)}}</div>
                 <button class="reset" onclick="resetForm()">Try again</button>
             `;
             result.classList.add('show');
@@ -618,21 +626,21 @@ def get_portal_html() -> str:
             }}
 
             result.innerHTML = `
-                <div class="client-name">${{c.name}}</div>
-                <div class="sessions-count">${{remaining}}</div>
+                <div class="client-name">${{escapeHtml(c.name)}}</div>
+                <div class="sessions-count">${{parseInt(remaining) || 0}}</div>
                 <div class="sessions-label">sessions remaining</div>
                 <div class="status ${{statusClass}}">${{statusText}}</div>
                 <div class="stats">
                     <div class="stat">
-                        <div class="stat-value">${{c.sessions_purchased}}</div>
+                        <div class="stat-value">${{parseInt(c.sessions_purchased) || 0}}</div>
                         <div class="stat-label">Purchased</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-value">${{c.sessions_used}}</div>
+                        <div class="stat-value">${{parseInt(c.sessions_used) || 0}}</div>
                         <div class="stat-label">Used</div>
                     </div>
                 </div>
-                ${{c.last_synced ? `<div class="meta">Updated ${{formatDate(c.last_synced)}}</div>` : ''}}
+                ${{c.last_synced ? `<div class="meta">Updated ${{escapeHtml(formatDate(c.last_synced))}}</div>` : ''}}
                 <button class="reset" onclick="resetForm()">Check another</button>
             `;
             result.classList.add('show');
