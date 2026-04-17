@@ -76,15 +76,15 @@ class StripePaymentSync(BaseSync):
                         result.records_created += 1
                     else:
                         result.records_updated += 1
-                except Exception as e:
+                except Exception:
                     result.records_failed += 1
-                    result.errors.append(f"Payment {payment.id}: {str(e)}")
+                    result.errors.append(f"Payment {payment.id}: sync failed")
 
             result.success = True
 
-        except Exception as e:
-            self.logger.error(f"Stripe sync failed: {e}")
-            result.errors.append(str(e))
+        except Exception:
+            self.logger.exception("Stripe sync failed")
+            result.errors.append("Stripe sync failed")
 
         result.complete()
         return result
@@ -182,13 +182,13 @@ class StripeSubscriptionSync(BaseSync):
                         result.records_updated += 1
                 except Exception as e:
                     result.records_failed += 1
-                    result.errors.append(f"Subscription {sub.id}: {str(e)}")
+                    result.errors.append(f"Subscription {sub.id}: sync failed")
 
             result.success = True
 
-        except Exception as e:
-            self.logger.error(f"Subscription sync failed: {e}")
-            result.errors.append(str(e))
+        except Exception:
+            self.logger.exception("Subscription sync failed")
+            result.errors.append("Subscription sync failed")
 
         result.complete()
         return result

@@ -59,8 +59,8 @@ def get_notion_client():
             db_invoices=os.environ.get("NOTION_DB_INVOICES"),
         )
         return NotionClient(config), config
-    except Exception as e:
-        print(f"Notion init error: {e}")
+    except Exception:
+        # Log without exposing error details
         return None, None
 
 
@@ -160,8 +160,7 @@ async def lookup_client(phone: str = None, email: str = None):
                     if normalize_phone(page_phone) == normalized:
                         client_page = page
                         break
-    except Exception as e:
-        print(f"Lookup error: {e}")
+    except Exception:
         return JSONResponse(
             status_code=500,
             content={"detail": "Error looking up client. Please try again."}

@@ -195,8 +195,8 @@ def register_portal_routes(app):
                             time=extract_property_value(appt_props, "Time", "rich_text") or "",
                             status=extract_property_value(appt_props, "Status", "select") or "",
                         ))
-                except Exception as e:
-                    logger.warning(f"Failed to fetch appointments: {e}")
+                except Exception:
+                    logger.warning("Failed to fetch appointments")
 
         return PortalResponse(
             found=True,
