@@ -660,10 +660,31 @@ def get_portal_html() -> str:
 
             const statsDiv = document.createElement('div');
             statsDiv.className = 'stats';
-            statsDiv.innerHTML = `
-                <div class="stat"><div class="stat-value">${{parseInt(c.sessions_purchased) || 0}}</div><div class="stat-label">Purchased</div></div>
-                <div class="stat"><div class="stat-value">${{parseInt(c.sessions_used) || 0}}</div><div class="stat-label">Used</div></div>
-            `;
+
+            const stat1 = document.createElement('div');
+            stat1.className = 'stat';
+            const val1 = document.createElement('div');
+            val1.className = 'stat-value';
+            val1.textContent = parseInt(c.sessions_purchased) || 0;
+            const lbl1 = document.createElement('div');
+            lbl1.className = 'stat-label';
+            lbl1.textContent = 'Purchased';
+            stat1.appendChild(val1);
+            stat1.appendChild(lbl1);
+
+            const stat2 = document.createElement('div');
+            stat2.className = 'stat';
+            const val2 = document.createElement('div');
+            val2.className = 'stat-value';
+            val2.textContent = parseInt(c.sessions_used) || 0;
+            const lbl2 = document.createElement('div');
+            lbl2.className = 'stat-label';
+            lbl2.textContent = 'Used';
+            stat2.appendChild(val2);
+            stat2.appendChild(lbl2);
+
+            statsDiv.appendChild(stat1);
+            statsDiv.appendChild(stat2);
             result.appendChild(statsDiv);
 
             if (c.last_synced) {{

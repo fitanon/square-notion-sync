@@ -504,50 +504,86 @@ def get_portal_html() -> str:
                 : client.status === 'Low Sessions' ? 'status-low'
                 : 'status-needs';
 
-            let appointmentsHtml = '';
+            result.textContent = '';
+            const card = document.createElement('div');
+            card.className = 'result-card';
+
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'client-name';
+            nameDiv.textContent = client.name;
+            card.appendChild(nameDiv);
+
+            const circleDiv = document.createElement('div');
+            circleDiv.className = 'sessions-circle';
+            const numDiv = document.createElement('div');
+            numDiv.className = 'sessions-number';
+            numDiv.textContent = parseInt(client.sessions_remaining) || 0;
+            const lblDiv = document.createElement('div');
+            lblDiv.className = 'sessions-label';
+            lblDiv.textContent = 'sessions left';
+            circleDiv.appendChild(numDiv);
+            circleDiv.appendChild(lblDiv);
+            card.appendChild(circleDiv);
+
+            const statusDiv = document.createElement('div');
+            statusDiv.className = 'status-badge ' + statusClass;
+            statusDiv.textContent = client.status;
+            card.appendChild(statusDiv);
+
+            const row1 = document.createElement('div');
+            row1.className = 'detail-row';
+            const lbl1 = document.createElement('span');
+            lbl1.className = 'detail-label';
+            lbl1.textContent = 'Purchased';
+            const val1 = document.createElement('span');
+            val1.className = 'detail-value';
+            val1.textContent = parseInt(client.sessions_purchased) || 0;
+            row1.appendChild(lbl1);
+            row1.appendChild(val1);
+            card.appendChild(row1);
+
+            const row2 = document.createElement('div');
+            row2.className = 'detail-row';
+            const lbl2 = document.createElement('span');
+            lbl2.className = 'detail-label';
+            lbl2.textContent = 'Used';
+            const val2 = document.createElement('span');
+            val2.className = 'detail-value';
+            val2.textContent = parseInt(client.sessions_used) || 0;
+            row2.appendChild(lbl2);
+            row2.appendChild(val2);
+            card.appendChild(row2);
+
             if (data.upcoming_appointments && data.upcoming_appointments.length > 0) {
-                const appts = data.upcoming_appointments.map(a => `
-                    <div class="appt-item">
-                        <span class="appt-date">${escapeHtml(formatDate(a.date))}</span>
-                        <span class="appt-time">${escapeHtml(a.time || '')}</span>
-                    </div>
-                `).join('');
-                appointmentsHtml = `
-                    <div class="appointments">
-                        <h3>Upcoming Appointments</h3>
-                        ${appts}
-                    </div>
-                `;
+                const apptsDiv = document.createElement('div');
+                apptsDiv.className = 'appointments';
+                const h3 = document.createElement('h3');
+                h3.textContent = 'Upcoming Appointments';
+                apptsDiv.appendChild(h3);
+                data.upcoming_appointments.forEach(a => {
+                    const item = document.createElement('div');
+                    item.className = 'appt-item';
+                    const dateSpan = document.createElement('span');
+                    dateSpan.className = 'appt-date';
+                    dateSpan.textContent = formatDate(a.date);
+                    const timeSpan = document.createElement('span');
+                    timeSpan.className = 'appt-time';
+                    timeSpan.textContent = a.time || '';
+                    item.appendChild(dateSpan);
+                    item.appendChild(timeSpan);
+                    apptsDiv.appendChild(item);
+                });
+                card.appendChild(apptsDiv);
             }
 
-            const lastSyncHtml = client.last_synced
-                ? `<div class="last-sync">Last updated: ${escapeHtml(formatDate(client.last_synced))}</div>`
-                : '';
+            if (client.last_synced) {
+                const syncDiv = document.createElement('div');
+                syncDiv.className = 'last-sync';
+                syncDiv.textContent = 'Last updated: ' + formatDate(client.last_synced);
+                card.appendChild(syncDiv);
+            }
 
-            result.innerHTML = `
-                <div class="result-card">
-                    <div class="client-name">${escapeHtml(client.name)}</div>
-
-                    <div class="sessions-circle">
-                        <div class="sessions-number">${parseInt(client.sessions_remaining) || 0}</div>
-                        <div class="sessions-label">sessions left</div>
-                    </div>
-
-                    <div class="status-badge ${statusClass}">${escapeHtml(client.status)}</div>
-
-                    <div class="detail-row">
-                        <span class="detail-label">Purchased</span>
-                        <span class="detail-value">${parseInt(client.sessions_purchased) || 0}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Used</span>
-                        <span class="detail-value">${parseInt(client.sessions_used) || 0}</span>
-                    </div>
-
-                    ${appointmentsHtml}
-                    ${lastSyncHtml}
-                </div>
-            `;
+            result.appendChild(card);
             result.classList.add('show');
         }
 
