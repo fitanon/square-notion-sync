@@ -51,8 +51,8 @@ class SyncScheduler:
         """Handle job execution error."""
         job_id = event.job_id
         self._last_run[job_id] = datetime.now(pytz.timezone(self.config.timezone))
-        self._last_error[job_id] = str(event.exception)
-        logger.error(f"Sync job {job_id} failed: {event.exception}")
+        self._last_error[job_id] = "Job execution failed"
+        logger.exception(f"Sync job {job_id} failed")
 
     def add_daily_sync(
         self,
