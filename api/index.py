@@ -560,14 +560,6 @@ def get_portal_html() -> str:
         const result = document.getElementById('result');
         const submitBtn = document.getElementById('submitBtn');
 
-        // Escape HTML to prevent XSS
-        function escapeHtml(str) {{
-            if (str == null) return '';
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }}
-
         form.addEventListener('submit', async (e) => {{
             e.preventDefault();
             const phone = document.getElementById('phone').value.trim();
