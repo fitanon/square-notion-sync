@@ -323,8 +323,9 @@ def register_routes(app: FastAPI):
                 cancel_url=cancel_url,
             )
             return {"checkout_url": url}
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=str(e))
+        except Exception:
+            logger.exception("Checkout session creation failed")
+            raise HTTPException(status_code=400, detail="Failed to create checkout session")
 
     @app.get("/stripe/prices")
     def list_stripe_prices(request: Request):
