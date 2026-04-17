@@ -168,7 +168,7 @@ class StripeClient:
 
     def __init__(self, config: StripeConfig):
         self.config = config
-        stripe.api_key = config.secret_key
+        self._api_key = config.secret_key  # Store locally, pass per-request
         self._cached_prices: Dict[str, TieredPrice] = {}
 
     # ─────────────────────────────────────────────────────────
@@ -188,6 +188,7 @@ class StripeClient:
             name=name,
             phone=phone,
             metadata=metadata or {},
+        api_key=self._api_key,
         )
         logger.info(f"Created Stripe customer {customer.id}")
         return StripeCustomer.from_stripe(customer)
@@ -195,7 +196,7 @@ class StripeClient:
     def get_customer(self, customer_id: str) -> Optional[StripeCustomer]:
         """Get customer by ID."""
         try:
-            customer = stripe.Customer.retrieve(customer_id)
+            customer = stripe.Customer.retrieve(customer_id, api_key=self._api_key)
             if customer.deleted:
                 return None
             return StripeCustomer.from_stripe(customer)
@@ -204,7 +205,7 @@ class StripeClient:
 
     def find_customer_by_email(self, email: str) -> Optional[StripeCustomer]:
         """Find customer by email address."""
-        customers = stripe.Customer.list(email=email, limit=1)
+        customers = stripe.Customer.list(email=email, limit=1, api_key=self._api_key)
         if customers.data:
             return StripeCustomer.from_stripe(customers.data[0])
         return None
@@ -227,7 +228,7 @@ class StripeClient:
         params = {"limit": limit}
         if starting_after:
             params["starting_after"] = starting_after
-        customers = stripe.Customer.list(**params)
+        customers = stripe.Customer.list(**params, api_key=self._api_key)
         return [StripeCustomer.from_stripe(c) for c in customers.data]
 
     # ─────────────────────────────────────────────────────────
@@ -239,6 +240,7 @@ class StripeClient:
         product = stripe.Product.create(
             name=name,
             description=description,
+        api_key=self._api_key,
         )
         logger.info(f"Created product {product.id}: {name}")
         return product.id
@@ -261,7 +263,7 @@ class StripeClient:
         if recurring_interval:
             params["recurring"] = {"interval": recurring_interval}
 
-        price = stripe.Price.create(**params)
+        price = stripe.Price.create(**params, api_key=self._api_key)
         logger.info(f"Created price {price.id}: ${amount_cents/100:.2f} {currency.upper()}")
         return price.id
 
@@ -320,7 +322,7 @@ class StripeClient:
             return self._cached_prices[price_id]
 
         try:
-            price = stripe.Price.retrieve(price_id, expand=["product"])
+            price = stripe.Price.retrieve(price_id, expand=["product"], api_key=self._api_key)
             product = price.product
             product_name = product.name if hasattr(product, "name") else ""
 
@@ -359,7 +361,7 @@ class StripeClient:
 
         Returns the checkout session URL.
         """
-        price = stripe.Price.retrieve(price_id)
+        price = stripe.Price.retrieve(price_id, api_key=self._api_key)
         mode = "subscription" if price.recurring else "payment"
 
         params = {
@@ -375,7 +377,7 @@ class StripeClient:
         elif customer_email:
             params["customer_email"] = customer_email
 
-        session = stripe.checkout.Session.create(**params)
+        session = stripe.checkout.Session.create(**params, api_key=self._api_key)
         logger.info(f"Created checkout session {session.id} for price {price_id}")
         return session.url
 
@@ -398,14 +400,14 @@ class StripeClient:
         if description:
             params["description"] = description
 
-        pi = stripe.PaymentIntent.create(**params)
+        pi = stripe.PaymentIntent.create(**params, api_key=self._api_key)
         logger.info(f"Created PaymentIntent {pi.id}: ${amount_cents/100:.2f}")
         return StripePayment.from_payment_intent(pi)
 
     def get_payment(self, payment_intent_id: str) -> Optional[StripePayment]:
         """Get payment intent by ID."""
         try:
-            pi = stripe.PaymentIntent.retrieve(payment_intent_id)
+            pi = stripe.PaymentIntent.retrieve(payment_intent_id, api_key=self._api_key)
             return StripePayment.from_payment_intent(pi)
         except stripe.error.InvalidRequestError:
             return None
@@ -423,7 +425,7 @@ class StripeClient:
         if created_after:
             params["created"] = {"gte": int(created_after.timestamp())}
 
-        intents = stripe.PaymentIntent.list(**params)
+        intents = stripe.PaymentIntent.list(**params, api_key=self._api_key)
         return [StripePayment.from_payment_intent(pi) for pi in intents.data]
 
     def list_charges(
@@ -439,7 +441,7 @@ class StripeClient:
         if created_after:
             params["created"] = {"gte": int(created_after.timestamp())}
 
-        charges = stripe.Charge.list(**params)
+        charges = stripe.Charge.list(**params, api_key=self._api_key)
         return [StripePayment.from_charge(c) for c in charges.data]
 
     # ─────────────────────────────────────────────────────────
@@ -457,6 +459,7 @@ class StripeClient:
             customer=customer_id,
             items=[{"price": price_id}],
             metadata=metadata or {},
+        api_key=self._api_key,
         )
         logger.info(f"Created subscription {sub.id} for customer {customer_id}")
         return StripeSubscription.from_stripe(sub)
@@ -464,7 +467,7 @@ class StripeClient:
     def get_subscription(self, subscription_id: str) -> Optional[StripeSubscription]:
         """Get subscription by ID."""
         try:
-            sub = stripe.Subscription.retrieve(subscription_id)
+            sub = stripe.Subscription.retrieve(subscription_id, api_key=self._api_key)
             return StripeSubscription.from_stripe(sub)
         except stripe.error.InvalidRequestError:
             return None
@@ -479,9 +482,10 @@ class StripeClient:
             sub = stripe.Subscription.modify(
                 subscription_id,
                 cancel_at_period_end=True,
+            api_key=self._api_key,
             )
         else:
-            sub = stripe.Subscription.delete(subscription_id)
+            sub = stripe.Subscription.delete(subscription_id, api_key=self._api_key)
         logger.info(f"Cancelled subscription {subscription_id} (at_period_end={at_period_end})")
         return StripeSubscription.from_stripe(sub)
 
@@ -498,7 +502,7 @@ class StripeClient:
         if status:
             params["status"] = status
 
-        subs = stripe.Subscription.list(**params)
+        subs = stripe.Subscription.list(**params, api_key=self._api_key)
         return [StripeSubscription.from_stripe(s) for s in subs.data]
 
     def get_customer_subscriptions(self, customer_id: str) -> List[StripeSubscription]:

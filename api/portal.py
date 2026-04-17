@@ -440,6 +440,14 @@ def get_portal_html() -> str:
         const result = document.getElementById('result');
         const submitBtn = document.getElementById('submitBtn');
 
+        // Escape HTML to prevent XSS
+        function escapeHtml(str) {
+            if (str == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(str);
+            return div.innerHTML;
+        }
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -482,7 +490,7 @@ def get_portal_html() -> str:
         });
 
         function showError(message) {
-            result.innerHTML = `<div class="error">${message}</div>`;
+            result.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
             result.classList.add('show');
         }
 
@@ -496,8 +504,8 @@ def get_portal_html() -> str:
             if (data.upcoming_appointments && data.upcoming_appointments.length > 0) {
                 const appts = data.upcoming_appointments.map(a => `
                     <div class="appt-item">
-                        <span class="appt-date">${formatDate(a.date)}</span>
-                        <span class="appt-time">${a.time || ''}</span>
+                        <span class="appt-date">${escapeHtml(formatDate(a.date))}</span>
+                        <span class="appt-time">${escapeHtml(a.time || '')}</span>
                     </div>
                 `).join('');
                 appointmentsHtml = `
@@ -509,27 +517,27 @@ def get_portal_html() -> str:
             }
 
             const lastSyncHtml = client.last_synced
-                ? `<div class="last-sync">Last updated: ${formatDate(client.last_synced)}</div>`
+                ? `<div class="last-sync">Last updated: ${escapeHtml(formatDate(client.last_synced))}</div>`
                 : '';
 
             result.innerHTML = `
                 <div class="result-card">
-                    <div class="client-name">${client.name}</div>
+                    <div class="client-name">${escapeHtml(client.name)}</div>
 
                     <div class="sessions-circle">
-                        <div class="sessions-number">${client.sessions_remaining}</div>
+                        <div class="sessions-number">${parseInt(client.sessions_remaining) || 0}</div>
                         <div class="sessions-label">sessions left</div>
                     </div>
 
-                    <div class="status-badge ${statusClass}">${client.status}</div>
+                    <div class="status-badge ${statusClass}">${escapeHtml(client.status)}</div>
 
                     <div class="detail-row">
                         <span class="detail-label">Purchased</span>
-                        <span class="detail-value">${client.sessions_purchased}</span>
+                        <span class="detail-value">${parseInt(client.sessions_purchased) || 0}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Used</span>
-                        <span class="detail-value">${client.sessions_used}</span>
+                        <span class="detail-value">${parseInt(client.sessions_used) || 0}</span>
                     </div>
 
                     ${appointmentsHtml}
