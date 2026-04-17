@@ -302,10 +302,9 @@ def register_routes(app: FastAPI):
 
         # Validate price_key against configured prices
         if price_key not in config.stripe.prices:
-            valid_keys = list(config.stripe.prices.keys())
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid price_key. Valid options: {valid_keys}"
+                detail="Invalid price_key"
             )
 
         price_id = config.stripe.prices[price_key]
