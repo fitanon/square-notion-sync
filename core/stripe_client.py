@@ -189,7 +189,7 @@ class StripeClient:
             phone=phone,
             metadata=metadata or {},
         )
-        logger.info(f"Created Stripe customer {customer.id} for {email}")
+        logger.info(f"Created Stripe customer {customer.id}")
         return StripeCustomer.from_stripe(customer)
 
     def get_customer(self, customer_id: str) -> Optional[StripeCustomer]:

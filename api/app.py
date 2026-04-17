@@ -80,12 +80,16 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    # CORS: use APP_CORS_ORIGINS env var (comma-separated) or default to same-origin
+    cors_origins = os.getenv("APP_CORS_ORIGINS", "").split(",")
+    cors_origins = [o.strip() for o in cors_origins if o.strip()]
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=cors_origins or ["https://square-notion-sync.vercel.app"],
         allow_credentials=False,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type", "Authorization", "stripe-signature"],
     )
 
     register_routes(app)

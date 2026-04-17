@@ -15,12 +15,16 @@ from fastapi.middleware.cors import CORSMiddleware
 # Create app for Vercel
 app = FastAPI(title="Fit Clinic Portal")
 
+# CORS: restrict to same-origin by default
+cors_origins = os.getenv("APP_CORS_ORIGINS", "").split(",")
+cors_origins = [o.strip() for o in cors_origins if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins or ["https://square-notion-sync.vercel.app"],
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 # Minimalist design system - contrarian to Notion
