@@ -19,7 +19,7 @@ class SyncResult(BaseModel):
 
 @app.get('/health')
 def health():
-    return {'status': 'ok', 'env': os.getenv('SQUARE_ENV', 'sandbox')}
+    return {'status': 'ok'}
 
 
 @app.post('/sync/customer/{customer_id}', response_model=SyncResult)
