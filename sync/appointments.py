@@ -99,10 +99,10 @@ class AppointmentsSync(BaseSync):
                 else:
                     result.records_updated += 1
 
-            except Exception as e:
-                self.logger.error(f"Failed to sync booking {booking.id}: {e}")
+            except Exception:
+                self.logger.exception(f"Failed to sync booking {booking.id}")
                 result.records_failed += 1
-                result.errors.append(f"Booking {booking.id}: {str(e)}")
+                result.errors.append(f"Booking {booking.id}: sync failed")
 
         result.success = result.records_failed == 0 and len(result.errors) == 0
         result.complete()

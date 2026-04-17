@@ -147,14 +147,14 @@ class SessionsSync(BaseSync):
                         )
                         result.records_updated += 1
 
-                    except Exception as e:
-                        self.logger.error(f"Failed to sync customer {customer.id}: {e}")
+                    except Exception:
+                        self.logger.exception(f"Failed to sync customer {customer.id}")
                         result.records_failed += 1
-                        result.errors.append(f"Customer {customer.id}: {str(e)}")
+                        result.errors.append(f"Customer {customer.id}: sync failed")
 
-            except Exception as e:
-                self.logger.error(f"Failed to process account {code}: {e}")
-                result.errors.append(f"Account {code}: {str(e)}")
+            except Exception:
+                self.logger.exception(f"Failed to process account {code}")
+                result.errors.append(f"Account {code}: processing failed")
 
         result.success = result.records_failed == 0 and len(result.errors) == 0
         result.complete()

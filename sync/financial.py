@@ -101,10 +101,10 @@ class FinancialSync(BaseSync):
                 else:
                     stats["updated"] += 1
 
-            except Exception as e:
-                self.logger.error(f"Failed to sync payment {payment.id}: {e}")
+            except Exception:
+                self.logger.exception(f"Failed to sync payment {payment.id}")
                 stats["failed"] += 1
-                stats["errors"].append(f"Payment {payment.id}: {str(e)}")
+                stats["errors"].append(f"Payment {payment.id}: sync failed")
 
         return stats
 
@@ -129,13 +129,13 @@ class FinancialSync(BaseSync):
                         else:
                             stats["updated"] += 1
 
-                    except Exception as e:
-                        self.logger.error(f"Failed to sync invoice {invoice.id}: {e}")
+                    except Exception:
+                        self.logger.exception(f"Failed to sync invoice {invoice.id}")
                         stats["failed"] += 1
-                        stats["errors"].append(f"Invoice {invoice.id}: {str(e)}")
+                        stats["errors"].append(f"Invoice {invoice.id}: sync failed")
 
-            except Exception as e:
-                self.logger.error(f"Failed to fetch invoices for {code}: {e}")
-                stats["errors"].append(f"Invoices for {code}: {str(e)}")
+            except Exception:
+                self.logger.exception(f"Failed to fetch invoices for {code}")
+                stats["errors"].append(f"Invoices for {code}: fetch failed")
 
         return stats
