@@ -67,8 +67,8 @@ def oauth_callback(code: str = None, state: str = None, error: str = None):
     r = requests.post(token_url, json=payload)
     try:
         r.raise_for_status()
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f'Error exchanging code: {r.status_code} {r.text}')
+    except Exception:
+        raise HTTPException(status_code=502, detail='Error exchanging authorization code')
 
     data = r.json()
 

@@ -180,7 +180,8 @@ class StripeSubscriptionSync(BaseSync):
                         result.records_created += 1
                     else:
                         result.records_updated += 1
-                except Exception as e:
+                except Exception:
+                    self.logger.exception(f"Failed to sync subscription {sub.id}")
                     result.records_failed += 1
                     result.errors.append(f"Subscription {sub.id}: sync failed")
 

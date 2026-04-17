@@ -129,8 +129,8 @@ def import_customers(
 
             print(f"  Imported: {name}")
 
-        except Exception as e:
-            print(f"  Failed: {record} - {e}")
+        except Exception:
+            print(f"  Failed: {record}")
             stats["failed"] += 1
 
     return stats
@@ -204,8 +204,8 @@ def import_transactions(
 
             print(f"  Imported: {payment_id} - ${amount}")
 
-        except Exception as e:
-            print(f"  Failed: {record} - {e}")
+        except Exception:
+            print(f"  Failed: {record}")
             stats["failed"] += 1
 
     return stats
@@ -306,8 +306,8 @@ def main():
 
             print(f"  Done: {stats}")
 
-        except Exception as e:
-            print(f"  Error processing file: {e}")
+        except Exception:
+            print(f"  Error processing file")
 
     print(f"\n{'=' * 60}")
     print(f"Import Complete")

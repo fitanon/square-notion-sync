@@ -102,8 +102,8 @@ if __name__ == '__main__':
 
         print(json.dumps(out, indent=2))
     except requests.HTTPError as e:
-        print('HTTP error:', e.response.status_code, e.response.text)
+        print(f'HTTP error: {e.response.status_code}')
         sys.exit(1)
-    except Exception as e:
-        print('Error:', str(e))
+    except Exception:
+        print('Error: operation failed')
         sys.exit(1)

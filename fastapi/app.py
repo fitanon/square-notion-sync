@@ -64,9 +64,9 @@ def sync_customer(customer_id: str, account_name: str = None):
     # Attempt Notion upsert (safe: prints payload if not configured)
     try:
         res = notion_helper.upsert_connection_row(customer.get('given_name', '') + ' ' + customer.get('family_name', ''), payload)
-    except Exception as e:
+    except Exception:
         # return the payload and note the upsert error
-        return {'status': 'partial', 'details': {'payload': payload, 'notion_error': str(e)}}
+        return {'status': 'partial', 'details': {'payload': payload, 'notion_error': 'upsert failed'}}
 
     return {'status': 'ok', 'details': {'payload': payload, 'notion_result': res}}
 
