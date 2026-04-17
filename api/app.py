@@ -272,7 +272,7 @@ def register_routes(app: FastAPI):
     @app.post("/sync/stripe/payments", response_model=SyncResponse)
     def trigger_stripe_payment_sync(
         request: Request,
-        days_back: int = Query(30, description="Days of payment history to sync"),
+        days_back: int = Query(30, description="Days of payment history to sync", ge=1, le=365),
     ):
         """Sync Stripe payments to Notion."""
         if not request.app.state.stripe_payment_sync:
