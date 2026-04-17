@@ -160,7 +160,7 @@ def register_routes(app: FastAPI):
     def trigger_financial_sync(
         request: Request,
         accounts: Optional[List[str]] = Query(None, description="Account codes (PA, TFC, FWM)"),
-        days_back: int = Query(30, description="Days of history to sync"),
+        days_back: int = Query(30, description="Days of history to sync", ge=1, le=365),
     ):
         """Sync payment transactions and invoices from Square to Notion."""
         result = request.app.state.financial_sync.sync(account_codes=accounts, days_back=days_back)
@@ -170,8 +170,8 @@ def register_routes(app: FastAPI):
     def trigger_appointments_sync(
         request: Request,
         accounts: Optional[List[str]] = Query(None),
-        days_back: int = Query(30),
-        days_forward: int = Query(30),
+        days_back: int = Query(30, ge=1, le=365),
+        days_forward: int = Query(30, ge=1, le=365),
     ):
         """Sync bookings/appointments with tandem detection."""
         result = request.app.state.appointments_sync.sync(
@@ -248,8 +248,8 @@ def register_routes(app: FastAPI):
     def get_tandem_report(
         request: Request,
         accounts: Optional[List[str]] = Query(None),
-        days_back: int = Query(7),
-        days_forward: int = Query(14),
+        days_back: int = Query(7, ge=1, le=365),
+        days_forward: int = Query(14, ge=1, le=365),
     ):
         return request.app.state.appointments_sync.get_tandem_summary(
             account_codes=accounts, days_back=days_back, days_forward=days_forward,
@@ -259,7 +259,7 @@ def register_routes(app: FastAPI):
     def get_low_sessions_report(
         request: Request,
         accounts: Optional[List[str]] = Query(None),
-        threshold: int = Query(2),
+        threshold: int = Query(2, ge=0, le=100),
     ):
         return request.app.state.sessions_sync.get_low_session_clients(
             account_codes=accounts, threshold=threshold,
