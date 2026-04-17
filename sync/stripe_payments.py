@@ -77,6 +77,7 @@ class StripePaymentSync(BaseSync):
                     else:
                         result.records_updated += 1
                 except Exception:
+                    self.logger.exception(f"Failed to sync payment {payment.id}")
                     result.records_failed += 1
                     result.errors.append(f"Payment {payment.id}: sync failed")
 

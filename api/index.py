@@ -4,6 +4,7 @@ Vercel serverless entry point for Fit Clinic Portal.
 
 import sys
 import os
+import logging
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -11,6 +12,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+
+logger = logging.getLogger(__name__)
 
 # Create app for Vercel
 app = FastAPI(title="Fit Clinic Portal")
@@ -60,7 +63,7 @@ def get_notion_client():
         )
         return NotionClient(config), config
     except Exception:
-        # Log without exposing error details
+        logger.exception("Failed to initialize Notion client")
         return None, None
 
 
@@ -161,6 +164,7 @@ async def lookup_client(phone: str = None, email: str = None):
                         client_page = page
                         break
     except Exception:
+        logger.exception("Error during client lookup")
         return JSONResponse(
             status_code=500,
             content={"detail": "Error looking up client. Please try again."}
