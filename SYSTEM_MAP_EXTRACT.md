@@ -80,3 +80,45 @@ The following IDs were repeatedly referenced and are the highest-value for pipel
 - **Google Sheets**: transformations + live dashboard feed.
 - **Notion**: operations-facing working datasets and controlled manual overrides.
 
+## 8) Additional Notion DB IDs extracted from prompt inventory
+
+These were explicitly provided in your saved prompt dump and are added here for
+reference/config alignment.
+
+| Name | Notion DB ID |
+|---|---|
+| Client Assessments | `[REDACTED]` |
+| Official Database | `28072568-b32a-802c-ac78-faac010d4577` |
+| Program Tracker | `fd5bea0b-9ca6-484b-9d39-6a4fef8d12de` |
+| Captures | `911aaf1b-14d7-43ee-81a6-c8033c094854` |
+| Days | `be53ccf2-d8aa-42e4-8403-0b3d7f393800` |
+| Targets | `063da530-3265-4628-8c4a-b05456a7f18e` |
+| Session Logs | `1e272568-b32a-805b-8fa1-f4c08fc13a9e` |
+| Home | `23572568-b32a-800d-a8b4-cc5d5527c1cb` |
+| Employee Onboarding Form | `2c672568-b32a-80fd-9071-d52ca28c94a9` |
+| Master Organizational Directory | `ce2fbd41-3290-4e42-b7c3-650820fa04ef` |
+| Links [2026] | `30d72568-b32a-813d-9942-fd359b525f04` |
+| Staff Links & Resources | `05bc8072-3d9d-4e80-9085-4e160ef20b42` |
+| Wells Fargo Transactions | `1ce9d672-3246-45ad-870a-e49b7376f241` |
+| Appointments | `1e272568-b32a-8010-8f94-f8bb521eeca4` |
+| Clients | `1e272568-b32a-8097-b8ae-dc5947b22f74` |
+| Projects | `20172568-b32a-808c-a6ef-c320e6ffa2a7` |
+| Meetings | `23472568-b32a-80f3-b4c5-e00c72d39e99` |
+| AI-Enhanced Knowledge Base Tracker | `24572568-b32a-8005-8ebb-ddc7bbc00079` |
+| Transition Clients | `590dec84-411b-4403-8247-8ef40b6776ec` |
+| Developer APIs & Integrations | `7f2edba9-0fe5-4aef-b741-e5b2fa0cc1b3` |
+| Square Sales - TFC | `83ff7e37-6dea-4eb7-943a-5b159d881419` |
+| All Clients | `846de93c-8cce-4707-a71f-ac5a9fcef37f` |
+| FitClinic Customer Sync Database | `98777021-5044-4456-ae36-d90b1ba7ae1c` |
+| Square Customers - TFC | `d0da27b5-84f7-45b1-ac34-ba2c6f11940d` |
+| Client Database | `1e272568-b32a-804c-bcf2-cf85f55283fa` |
+| Client Intake Form | `1e272568-b32a-8062-a9a6-f8a71dfd0efa` |
+| All Workflow | `28072568-b32a-804e-84bb-fd81566b4e35` |
+
+Notes:
+- Your prompt contained many duplicate "Todays Diet Table" DB entries with
+  different IDs. Keep those as per-client shards unless you decide to
+  consolidate.
+- For automation/query scripts in this repo, still prefer resolved
+  `collection://...` data source IDs when available.
+
