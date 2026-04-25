@@ -259,9 +259,29 @@ def load_google_sheet_rows(
     elif service_account_file:
         client = gspread.service_account(filename=service_account_file)
     else:
-        raise ValueError(
-            "Missing Google credentials. Set --service-account-file or --service-account-json."
-        )
+        # Fall back to Application Default Credentials (ADC).
+        # Works when the user has run: gcloud auth application-default login
+        # This bypasses the need for a service account key file entirely.
+        try:
+            import google.auth
+            from google.auth.transport.requests import Request as GoogleAuthRequest
+            from google.oauth2.credentials import Credentials
+
+            SCOPES = [
+                "https://www.googleapis.com/auth/spreadsheets.readonly",
+                "https://www.googleapis.com/auth/drive.readonly",
+            ]
+            creds, _ = google.auth.default(scopes=SCOPES)
+            # Refresh if needed
+            creds.refresh(GoogleAuthRequest())
+            client = gspread.authorize(creds)
+        except Exception as adc_exc:
+            raise ValueError(
+                "Missing Google credentials. Either:\n"
+                "  1. Run: gcloud auth application-default login\n"
+                "  2. Set --service-account-file or --service-account-json\n"
+                f"ADC error: {adc_exc}"
+            )
 
     spreadsheet = client.open_by_key(spreadsheet_id)
     worksheet = spreadsheet.worksheet(worksheet_name) if worksheet_name else spreadsheet.get_worksheet(0)
