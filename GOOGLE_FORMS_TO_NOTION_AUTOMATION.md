@@ -5,8 +5,12 @@ notification and creates or updates a page in your Notion data source.
 
 Default Notion target:
 
-- Notion page/database link: `https://www.notion.so/fitclinic/1865bdbbe2fa499798d1fc00d6382649`
+- Official Notion page/database link: `https://fitclinic.notion.site/34d72568b32a8181832be8eb6a9f0822?v=34d72568b32a8129a7c2000c5aa773e3&source=copy_link`
 - Data source ID: `34d72568-b32a-814e-9e2b-000b7b75a88a`
+
+Notion's browser page URL and API data source ID are different identifiers. Use
+the page link above for manual review, and use the data source ID above for
+`NOTION_DATA_SOURCE_ID`.
 
 ## How it works
 
