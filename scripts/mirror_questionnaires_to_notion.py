@@ -265,7 +265,6 @@ def load_google_sheet_rows(
         try:
             import google.auth
             from google.auth.transport.requests import Request as GoogleAuthRequest
-            from google.oauth2.credentials import Credentials
 
             SCOPES = [
                 "https://www.googleapis.com/auth/spreadsheets.readonly",

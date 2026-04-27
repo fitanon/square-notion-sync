@@ -143,6 +143,11 @@ square-notion-sync/
 
 See [ZAPIER_SETUP_INSTRUCTIONS.md](ZAPIER_SETUP_INSTRUCTIONS.md) for setting up automated sync with Zapier Tables.
 
+## System docs for future setup
+
+- [SYSTEM_MAP_EXTRACT.md](SYSTEM_MAP_EXTRACT.md) — extracted source-of-truth map for Sheets ↔ Notion ↔ Dashboard topology
+- [SECRETS_AND_ENV_REGISTRY.md](SECRETS_AND_ENV_REGISTRY.md) — copy/paste registry for GitHub Actions + Vercel environment variables and secrets
+
 ## Google Sheets Questionnaire → Notion Mirror
 
 Use this script to copy selected questionnaire responses from Google Sheets into a **new**
