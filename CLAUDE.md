@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+For cross-project context, separation of concerns, live links, and the Fit Clinic ecosystem diagram, read [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) before starting work.
+
 ## Build & Run Commands
 
 ```bash
