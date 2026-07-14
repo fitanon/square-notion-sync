@@ -26,7 +26,7 @@ def oauth_base():
 def oauth_start(account_name: str = 'default'):
     """Return a redirect to the Square OAuth authorize page for the given account_name."""
     if not CLIENT_ID:
-        raise HTTPException(status_code=500, detail='SQUARE APPLICATION_ID (CLIENT_ID) not configured')
+        raise HTTPException(status_code=500, detail='OAuth not configured')
 
     state = f"{account_name}:{uuid.uuid4().hex}"
     params = {
@@ -48,11 +48,11 @@ def oauth_callback(code: str = None, state: str = None, error: str = None):
 
     Returns JSON with stored token info (but not secrets)."""
     if error:
-        return JSONResponse({'status': 'error', 'detail': error})
+        return JSONResponse({'status': 'error', 'detail': 'Authorization was denied or failed'})
     if not code:
         raise HTTPException(status_code=400, detail='Missing code parameter')
     if not CLIENT_ID or not CLIENT_SECRET:
-        raise HTTPException(status_code=500, detail='CLIENT_ID or CLIENT_SECRET not configured')
+        raise HTTPException(status_code=500, detail='OAuth not configured')
 
     token_url = oauth_base() + '/oauth2/token'
     payload = {

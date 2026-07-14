@@ -1,5 +1,6 @@
 import os
 import requests
+import urllib.parse
 from typing import Optional
 
 def account_base_and_headers(token: str, api_version: str = '2025-06-16'):
@@ -15,7 +16,7 @@ def account_base_and_headers(token: str, api_version: str = '2025-06-16'):
 
 def get_customer(customer_id: str, token: str) -> Optional[dict]:
     base, headers = account_base_and_headers(token)
-    url = f"{base}/v2/customers/{customer_id}"
+    url = f"{base}/v2/customers/{urllib.parse.quote(customer_id, safe='')}"
     r = requests.get(url, headers=headers)
     if r.status_code == 404:
         return None
@@ -43,7 +44,7 @@ def find_customer_by_email(email: str, token: str) -> Optional[dict]:
 def get_last_payment_for_customer(customer_id: str, token: str) -> Optional[dict]:
     base, headers = account_base_and_headers(token)
     url = f"{base}/v2/payments"
-    params = {'customer_id': customer_id, 'sort_order': 'DESC', 'limit': 1}
+    params = {'customer_id': urllib.parse.quote(customer_id, safe=''), 'sort_order': 'DESC', 'limit': 1}
     r = requests.get(url, headers=headers, params=params)
     r.raise_for_status()
     payments = r.json().get('payments', [])
@@ -61,7 +62,7 @@ def get_orders_for_customer(customer_id: str, token: str, limit: int = 10) -> li
 
 def get_bookings_for_customer(customer_id: str, token: str) -> list:
     base, headers = account_base_and_headers(token)
-    url = f"{base}/v2/bookings?customer_id={customer_id}"
-    r = requests.get(url, headers=headers)
+    url = f"{base}/v2/bookings"
+    r = requests.get(url, headers=headers, params={'customer_id': customer_id})
     r.raise_for_status()
     return r.json().get('bookings', [])
