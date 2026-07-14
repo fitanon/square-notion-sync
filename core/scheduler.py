@@ -114,7 +114,7 @@ class SyncScheduler:
                 if job:
                     job.modify(next_run_time=datetime.now(pytz.timezone(self.config.timezone)))
                     triggered.append(job_id)
-                    logger.info(f"Triggered immediate sync for '{name}'")
+                    logger.info("Triggered immediate sync")
         else:
             # Trigger all jobs
             for job_name, job_id in self._sync_jobs.items():

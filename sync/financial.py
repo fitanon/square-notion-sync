@@ -60,7 +60,7 @@ class FinancialSync(BaseSync):
         end_time = datetime.utcnow()
         begin_time = end_time - timedelta(days=days_back)
 
-        self.logger.info(f"Starting financial sync for accounts: {codes}")
+        self.logger.info("Starting financial sync for %d accounts", len(codes))
         self.logger.info(f"Date range: {begin_time.date()} to {end_time.date()}")
 
         if self.transactions_db:
@@ -135,7 +135,7 @@ class FinancialSync(BaseSync):
                         stats["errors"].append(f"Invoice {invoice.id}: sync failed")
 
             except Exception:
-                self.logger.exception(f"Failed to fetch invoices for {code}")
-                stats["errors"].append(f"Invoices for {code}: fetch failed")
+                self.logger.exception("Failed to fetch invoices")
+                stats["errors"].append("Invoice fetch failed")
 
         return stats

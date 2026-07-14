@@ -368,7 +368,7 @@ def register_routes(app: FastAPI):
             raise HTTPException(status_code=400, detail="Webhook verification failed")
 
         result = request.app.state.stripe_client.handle_webhook_event(event)
-        logger.info(f"Processed webhook: {event.type}")
+        logger.info("Processed webhook event")
 
         # Auto-sync on successful payments
         if event.type == "payment_intent.succeeded":
@@ -376,7 +376,7 @@ def register_routes(app: FastAPI):
         elif event.type in ("customer.subscription.created", "customer.subscription.updated"):
             request.app.state.stripe_subscription_sync.sync()
 
-        return {"received": True, "event_type": event.type}
+        return {"received": True}
 
 
 # Create app instance

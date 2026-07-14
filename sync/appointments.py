@@ -71,7 +71,7 @@ class AppointmentsSync(BaseSync):
         start_at_min = now - timedelta(days=days_back)
         start_at_max = now + timedelta(days=days_forward)
 
-        self.logger.info(f"Starting appointments sync for accounts: {codes}")
+        self.logger.info("Starting appointments sync for %d accounts", len(codes))
         self.logger.info(f"Date range: {start_at_min.date()} to {start_at_max.date()}")
 
         # Collect all bookings first (for tandem detection)

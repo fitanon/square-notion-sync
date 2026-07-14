@@ -82,7 +82,7 @@ class SessionsSync(BaseSync):
             result.complete()
             return result
 
-        self.logger.info(f"Starting sessions sync for accounts: {codes}")
+        self.logger.info("Starting sessions sync for %d accounts", len(codes))
 
         now = datetime.utcnow()
         appt_start = now - timedelta(days=days_back_appointments)
@@ -93,12 +93,12 @@ class SessionsSync(BaseSync):
             if not client:
                 continue
 
-            self.logger.info(f"Processing account: {code}")
+            self.logger.info("Processing account")
 
             try:
                 # Bulk fetch all data upfront (avoids N+1)
                 customers = list(client.get_all_customers())
-                self.logger.info(f"Found {len(customers)} customers in {code}")
+                self.logger.info("Found %d customers", len(customers))
 
                 all_bookings = list(client.get_all_bookings(
                     start_at_min=appt_start,
@@ -153,8 +153,8 @@ class SessionsSync(BaseSync):
                         result.errors.append(f"Customer {customer.id}: sync failed")
 
             except Exception:
-                self.logger.exception(f"Failed to process account {code}")
-                result.errors.append(f"Account {code}: processing failed")
+                self.logger.exception("Failed to process account")
+                result.errors.append("Account processing failed")
 
         result.success = result.records_failed == 0 and len(result.errors) == 0
         result.complete()

@@ -465,7 +465,7 @@ class MultiAccountClient:
         for code in codes:
             client = self.clients.get(code.upper())
             if client:
-                logger.info(f"Fetching payments from {code}")
+                logger.info("Fetching payments")
                 yield from client.get_all_payments(begin_time, end_time)
 
     def get_all_customers(self, account_codes: List[str] = None) -> Iterator[Customer]:
@@ -475,7 +475,7 @@ class MultiAccountClient:
         for code in codes:
             client = self.clients.get(code.upper())
             if client:
-                logger.info(f"Fetching customers from {code}")
+                logger.info("Fetching customers")
                 yield from client.get_all_customers()
 
     def get_all_bookings(
@@ -490,7 +490,7 @@ class MultiAccountClient:
         for code in codes:
             client = self.clients.get(code.upper())
             if client:
-                logger.info(f"Fetching bookings from {code}")
+                logger.info("Fetching bookings")
                 yield from client.get_all_bookings(start_at_min, start_at_max)
 
     def detect_tandem_appointments(self, bookings: List[Booking], threshold_minutes: int = 15) -> List[Booking]:
