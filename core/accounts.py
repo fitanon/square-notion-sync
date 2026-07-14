@@ -5,6 +5,7 @@ Provides unified access to multiple Square accounts (PA, TFC, FWM).
 """
 
 import requests
+import urllib.parse
 from typing import Optional, List, Dict, Any, Iterator
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -289,7 +290,7 @@ class SquareClient:
     def get_customer(self, customer_id: str) -> Optional[Customer]:
         """Get a single customer by ID."""
         try:
-            data = self._get(f"/v2/customers/{customer_id}")
+            data = self._get(f"/v2/customers/{urllib.parse.quote(customer_id, safe='')}")
             c = data.get("customer")
             if not c:
                 return None

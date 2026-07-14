@@ -74,4 +74,4 @@ def sync_customer(customer_id: str, account_name: str = None):
 @app.post('/connect/oauth/callback')
 def oauth_callback(code: str = None, state: str = None):
     # Placeholder: implement exchange of code for token and store mapping to account
-    return {'status': 'not-implemented', 'code': code, 'state': state}
+    return {'status': 'not-implemented'}

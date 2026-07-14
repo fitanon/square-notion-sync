@@ -101,8 +101,8 @@ if __name__ == '__main__':
             out = fetch_bookings()
 
         print(json.dumps(out, indent=2))
-    except requests.HTTPError as e:
-        print(f'HTTP error: {e.response.status_code}')
+    except requests.HTTPError:
+        print('HTTP error')
         sys.exit(1)
     except Exception:
         print('Error: operation failed')
