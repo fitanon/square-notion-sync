@@ -81,7 +81,7 @@ def oauth_callback(code: str = None, state: str = None, error: str = None):
     save_tokens(acct_key, data)
 
     # Return non-sensitive data to the browser
-    return {'status': 'ok', 'account_key': acct_key, 'scopes': data.get('scope'), 'merchant_id': data.get('merchant_id')}
+    return {'status': 'ok', 'scopes': data.get('scope'), 'merchant_id': data.get('merchant_id')}
 
 
 @router.get('/connect/tokens')

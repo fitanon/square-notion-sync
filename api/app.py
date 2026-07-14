@@ -232,12 +232,12 @@ def register_routes(app: FastAPI):
     @app.post("/scheduler/pause/{job_name}")
     def pause_job(request: Request, job_name: str):
         request.app.state.scheduler.pause_job(job_name)
-        return {"status": "paused", "job": job_name}
+        return {"status": "paused"}
 
     @app.post("/scheduler/resume/{job_name}")
     def resume_job(request: Request, job_name: str):
         request.app.state.scheduler.resume_job(job_name)
-        return {"status": "resumed", "job": job_name}
+        return {"status": "resumed"}
 
     # ─────────────────────────────────────────────────────────────
     # REPORTS
