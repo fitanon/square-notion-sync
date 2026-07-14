@@ -23,15 +23,25 @@ sync/           → Sync modules (all extend BaseSync)
   financial.py  → Dashboard 1: Transactions/Invoices
   appointments.py → Dashboard 2: Bookings with tandem detection
   sessions.py   → Dashboard 3: Session tracking (purchased vs used)
-  stripe_payments.py → Stripe payment and subscription sync to Notion
+  stripe_payments.py → Stripe payment and subscription sync (NOT exported from __init__.py — import directly)
 
-api/            → FastAPI application
-  app.py        → Main API routes for sync and reports
-  index.py      → Vercel serverless entry point (client portal)
+api/            → Two separate FastAPI apps
+  app.py        → Main API: sync triggers, scheduler control, Stripe endpoints, reports (run via run.py)
+  index.py      → Standalone Vercel serverless portal: client session balance lookup (independent from app.py)
+  portal.py     → Portal routes registered with main app (separate from Vercel entry point)
 
-scripts/        → CLI tools
-fastapi/        → Legacy prototype (deprecated)
+scripts/        → CLI tools (import_data.py, square_examples.py)
+fastapi/        → Legacy prototype — DEPRECATED, do not extend (kept for reference only)
 ```
+
+## Two FastAPI Apps
+
+The project has two independent FastAPI applications:
+
+1. **`api/app.py`** — Full API server with scheduler, all sync endpoints, Stripe integration. Run locally via `python run.py`. Uses `core/`, `sync/`, lifespan context with scheduler.
+2. **`api/index.py`** — Minimal standalone serverless app for Vercel. Only handles client session balance lookups. Has its own Notion client init, HTML rendering, and error handling. Does NOT import from `api/app.py`.
+
+`vercel.json` routes all requests to `api/index.py`.
 
 ## Key Commands
 
@@ -39,10 +49,9 @@ fastapi/        → Legacy prototype (deprecated)
 pip install -r requirements.txt      # Install dependencies
 python run.py                        # Run API server (localhost:8000)
 python run.py --reload               # Dev mode with auto-reload
-pytest                               # Run all tests
-pytest tests/test_sync.py -v         # Run specific test file
-pytest -k "test_sessions"            # Run tests matching pattern
 ```
+
+No test suite exists yet. `pytest` is in requirements.txt but no `tests/` directory has been created.
 
 ## Environment Variables
 
@@ -59,12 +68,12 @@ NOTION_DB_TRANSACTIONS=<database-id>
 
 **Stripe payments** — for tiered pricing and subscriptions:
 ```
-STRIPE_SECRET_KEY=sk_...             # Stripe API secret key
-STRIPE_WEBHOOK_SECRET=whsec_...      # Webhook signing secret
-STRIPE_PRICE_1_SESSION=price_...     # Single session price ID
-STRIPE_PRICE_5_SESSIONS=price_...    # 5-pack price ID
-STRIPE_PRICE_10_SESSIONS=price_...   # 10-pack price ID
-STRIPE_PRICE_MONTHLY=price_...       # Monthly subscription price ID
+STRIPE_SECRET_KEY=sk_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_1_SESSION=price_...
+STRIPE_PRICE_5_SESSIONS=price_...
+STRIPE_PRICE_10_SESSIONS=price_...
+STRIPE_PRICE_MONTHLY=price_...
 ```
 
 **Vercel deployment** — set in Vercel dashboard for client portal:
@@ -118,36 +127,15 @@ Default tiers (customizable via Stripe Dashboard):
 
 These patterns are enforced across the codebase (SonarCloud quality gate requires A rating):
 
-- **No `str(e)` in user-facing output** — exception details must never leak to API responses, error messages, or CLI output. Use generic messages like `"sync failed"` and log the exception server-side with `logger.exception()`.
+- **No `str(e)` in user-facing output** — exception details must never leak to API responses, error messages, or CLI output. Use generic messages and log with `logger.exception()`.
 - **No `Exception as e`** — use bare `except Exception:` with `logger.exception()` for stack traces in logs.
-- **No env var names in error messages** — don't reveal internal config structure (e.g., `ACCOUNT__PA__TOKEN not found`). Use generic `"Account not configured"`.
-- **No internal state in API responses** — don't return environment values, config internals, or exception details through health/config/status endpoints.
+- **No env var names in error messages** — don't reveal internal config structure. Use generic `"Account not configured"`.
+- **No internal state in API responses** — don't return environment values, config internals, or exception details.
+- **No reflected user input** — never echo user-supplied query params or path segments back in responses.
+- **URL-encode user input in paths** — use `urllib.parse.quote(value, safe='')` for any user-controlled value in URL path segments.
 - **CORS restricted** — origins set via `APP_CORS_ORIGINS` env var or default to `https://square-notion-sync.vercel.app`. Never use `*`.
 - **XSS prevention** — all client-side rendering uses DOM APIs (`textContent`, `createElement`). No `innerHTML` anywhere.
 - **Input validation** — all `Query()` parameters with numeric ranges use `ge`/`le` bounds.
 - **Per-request API keys** — Stripe uses `api_key=self._api_key` per call, not global `stripe.api_key`.
 - **Server-controlled URLs** — checkout success/cancel URLs come from `APP_BASE_URL` env var, not user input.
 - **Bind to localhost** — default host is `127.0.0.1`, not `0.0.0.0`.
-
-## Completed Work (PR #1)
-
-### Stripe Integration
-- `core/stripe_client.py` — Full Stripe client with dataclasses (StripePayment, StripeSubscription, StripeCustomer, TieredPrice), checkout sessions, webhook handling
-- `core/config.py` — Added StripeConfig dataclass with price tier mapping
-- `sync/stripe_payments.py` — StripePaymentSync and StripeSubscriptionSync extending BaseSync
-- `api/app.py` — Stripe endpoints (checkout, prices, webhook with auto-sync)
-- `.env.example` — Stripe env vars documented
-
-### Client Portal (Vercel)
-- `api/index.py` — Standalone Vercel serverless app with minimalist design (system fonts, monochrome, contrarian-to-Notion aesthetic)
-- `api/portal.py` — Portal routes registered with main FastAPI app
-- `vercel.json` — Deployment config
-
-### Security Hardening (SonarCloud)
-- Replaced all `innerHTML` with DOM APIs across portal HTML
-- Removed all `str(e)` / `Exception as e` patterns from sync modules, scripts, fastapi legacy code
-- Restricted CORS origins, removed `0.0.0.0` binding
-- Removed env var values and internal config from API responses
-- Added `ge`/`le` bounds to all numeric query parameters
-- Fixed scheduler `last_error` to store generic message instead of exception text
-- Used `logger.exception()` in all exception handlers for proper stack trace logging
