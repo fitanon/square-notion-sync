@@ -30,10 +30,19 @@ from core.config import Config
 from core.notion import NotionClient
 
 
+def _resolve_path(file_path: str) -> Path:
+    """Resolve and validate a file path to prevent path traversal."""
+    resolved = Path(file_path).resolve()
+    if not resolved.is_file():
+        raise FileNotFoundError("Specified file does not exist")
+    return resolved
+
+
 def read_csv(file_path: str) -> List[Dict[str, Any]]:
     """Read CSV file and return list of dictionaries."""
+    resolved = _resolve_path(file_path)
     records = []
-    with open(file_path, 'r', encoding='utf-8-sig') as f:
+    with open(resolved, 'r', encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
         for row in reader:
             # Clean up keys (remove BOM, whitespace)
@@ -44,7 +53,8 @@ def read_csv(file_path: str) -> List[Dict[str, Any]]:
 
 def read_json(file_path: str) -> List[Dict[str, Any]]:
     """Read JSON file and return list of dictionaries."""
-    with open(file_path, 'r') as f:
+    resolved = _resolve_path(file_path)
+    with open(resolved, 'r') as f:
         data = json.load(f)
         if isinstance(data, list):
             return data

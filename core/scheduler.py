@@ -161,13 +161,13 @@ class SyncScheduler:
         job_id = self._sync_jobs.get(name)
         if job_id:
             self.scheduler.pause_job(job_id)
-            logger.info(f"Paused sync job '{name}'")
+            logger.info("Paused sync job")
 
     def resume_job(self, name: str):
         """Resume a paused sync job."""
         job_id = self._sync_jobs.get(name)
         if job_id:
             self.scheduler.resume_job(job_id)
-            logger.info(f"Resumed sync job '{name}'")
+            logger.info("Resumed sync job")
 
 

@@ -92,7 +92,7 @@ class BaseSync(ABC):
                 if code.upper() in self.config.accounts:
                     valid_codes.append(code.upper())
                 else:
-                    self.logger.warning(f"Unknown account code: {code}")
+                    self.logger.warning("Skipping unrecognized account code")
             return valid_codes
         return list(self.config.accounts.keys())
 
