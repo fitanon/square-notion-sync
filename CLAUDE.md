@@ -113,3 +113,41 @@ Default tiers (customizable via Stripe Dashboard):
 - 5-Pack: $400 ($80/session)
 - 10-Pack: $750 ($75/session)
 - Monthly Unlimited: $299/month
+
+## Security Conventions
+
+These patterns are enforced across the codebase (SonarCloud quality gate requires A rating):
+
+- **No `str(e)` in user-facing output** — exception details must never leak to API responses, error messages, or CLI output. Use generic messages like `"sync failed"` and log the exception server-side with `logger.exception()`.
+- **No `Exception as e`** — use bare `except Exception:` with `logger.exception()` for stack traces in logs.
+- **No env var names in error messages** — don't reveal internal config structure (e.g., `ACCOUNT__PA__TOKEN not found`). Use generic `"Account not configured"`.
+- **No internal state in API responses** — don't return environment values, config internals, or exception details through health/config/status endpoints.
+- **CORS restricted** — origins set via `APP_CORS_ORIGINS` env var or default to `https://square-notion-sync.vercel.app`. Never use `*`.
+- **XSS prevention** — all client-side rendering uses DOM APIs (`textContent`, `createElement`). No `innerHTML` anywhere.
+- **Input validation** — all `Query()` parameters with numeric ranges use `ge`/`le` bounds.
+- **Per-request API keys** — Stripe uses `api_key=self._api_key` per call, not global `stripe.api_key`.
+- **Server-controlled URLs** — checkout success/cancel URLs come from `APP_BASE_URL` env var, not user input.
+- **Bind to localhost** — default host is `127.0.0.1`, not `0.0.0.0`.
+
+## Completed Work (PR #1)
+
+### Stripe Integration
+- `core/stripe_client.py` — Full Stripe client with dataclasses (StripePayment, StripeSubscription, StripeCustomer, TieredPrice), checkout sessions, webhook handling
+- `core/config.py` — Added StripeConfig dataclass with price tier mapping
+- `sync/stripe_payments.py` — StripePaymentSync and StripeSubscriptionSync extending BaseSync
+- `api/app.py` — Stripe endpoints (checkout, prices, webhook with auto-sync)
+- `.env.example` — Stripe env vars documented
+
+### Client Portal (Vercel)
+- `api/index.py` — Standalone Vercel serverless app with minimalist design (system fonts, monochrome, contrarian-to-Notion aesthetic)
+- `api/portal.py` — Portal routes registered with main FastAPI app
+- `vercel.json` — Deployment config
+
+### Security Hardening (SonarCloud)
+- Replaced all `innerHTML` with DOM APIs across portal HTML
+- Removed all `str(e)` / `Exception as e` patterns from sync modules, scripts, fastapi legacy code
+- Restricted CORS origins, removed `0.0.0.0` binding
+- Removed env var values and internal config from API responses
+- Added `ge`/`le` bounds to all numeric query parameters
+- Fixed scheduler `last_error` to store generic message instead of exception text
+- Used `logger.exception()` in all exception handlers for proper stack trace logging
