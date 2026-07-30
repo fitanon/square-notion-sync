@@ -187,6 +187,22 @@ python scripts/mirror_questionnaires_to_notion.py \
   --use-questionnaire-default-fields
 ```
 
+## Google Forms → Email → Notion automation
+
+For real-time automation when a Google Form is submitted, use the Apps Script
+template in `google-apps-script/form_to_notion.gs`.
+
+Setup guide: [GOOGLE_FORMS_TO_NOTION_AUTOMATION.md](GOOGLE_FORMS_TO_NOTION_AUTOMATION.md)
+
+## Square → Google Sheets → Claude package summaries
+
+For a daily current-month Square sales report in Google Sheets, use
+`google-apps-script/square_monthly_sales_report.gs`. To summarize package
+purchases from each transaction row with Claude, use
+`google-apps-script/claude_package_summarizer.gs`.
+
+Setup guide: [SQUARE_SALES_CLAUDE_APPS_SCRIPT.md](SQUARE_SALES_CLAUDE_APPS_SCRIPT.md)
+
 ## Security
 
 - **Never commit `.env`** - it contains secrets
